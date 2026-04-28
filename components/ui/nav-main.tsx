@@ -17,6 +17,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+import Image from "next/image";
 
 export function NavMain({
   items,
@@ -34,6 +35,7 @@ export function NavMain({
 }) {
   return (
     <SidebarGroup>
+      <SidebarGroupLabel className="text-base ">Pupilaje</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
           <Collapsible

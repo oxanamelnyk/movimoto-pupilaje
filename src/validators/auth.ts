@@ -1,21 +1,21 @@
 import { z } from "zod";
 
 export const loginSchema = z.object({
-  email: z.email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  email: z.email("Email inválido"),
+  password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
 });
 
 export const signupSchema = z
   .object({
-    email: z.email("Invalid email address"),
-    name: z.string().min(2, "Name must be at least 2 characters"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
+    email: z.email("Email inválido"),
+    name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+    password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
     confirmPassword: z
       .string()
-      .min(8, "Password must be at least 8 characters"),
+      .min(8, "La contraseña debe tener al menos 8 caracteres"),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
+    message: "Las contraseñas no coinciden",
     path: ["confirmPassword"],
   });
 

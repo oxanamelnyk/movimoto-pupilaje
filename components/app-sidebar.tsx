@@ -169,7 +169,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           priority
           style={{ objectFit: "contain" }}
         />
-        <span className=""> Pupilaje</span>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />

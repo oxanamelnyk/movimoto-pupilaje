@@ -4,6 +4,9 @@ import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
 import Link from "next/link";
 import { loginSchema, type LoginInput } from "@/src/validators/auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Field, FieldLabel } from "@/components/ui/field";
 
 export function LoginForm() {
   const [loading, setLoading] = useState(false);
@@ -21,7 +24,7 @@ export function LoginForm() {
       try {
         const result = loginSchema.safeParse(value);
         if (!result.success) {
-          setError("Invalid email or password");
+          setError("Email o contraseña inválidos");
           return;
         }
 
@@ -29,7 +32,9 @@ export function LoginForm() {
         console.log("Login with:", value);
         // const response = await loginAction(value);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Login failed");
+        setError(
+          err instanceof Error ? err.message : "Error al iniciar sesión",
+        );
       } finally {
         setLoading(false);
       }
@@ -43,8 +48,8 @@ export function LoginForm() {
           e.preventDefault();
           form.handleSubmit();
         }}
-        className="space-y-4">
-        <h1 className="text-2xl font-bold text-center mb-6">Login</h1>
+        className="space-y-6">
+        <h1 className="text-2xl font-bold text-center mb-6">Iniciar Sesión</h1>
 
         {error && (
           <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md border border-red-200">
@@ -64,28 +69,22 @@ export function LoginForm() {
             },
           }}
           children={(field) => (
-            <div className="space-y-2">
-              <label
-                htmlFor={field.name}
-                className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <input
+            <Field>
+              <FieldLabel htmlFor={field.name}>Correo</FieldLabel>
+              <Input
                 id={field.name}
-                name={field.name}
                 type="email"
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                placeholder="you@example.com"
+                placeholder="tu@correo.com"
               />
               {field.state.meta.isTouched && field.state.meta.errors && (
-                <p className="text-sm text-red-600">
+                <p className="text-xs text-red-600">
                   {field.state.meta.errors[0]}
                 </p>
               )}
-            </div>
+            </Field>
           )}
         />
 
@@ -101,42 +100,33 @@ export function LoginForm() {
             },
           }}
           children={(field) => (
-            <div className="space-y-2">
-              <label
-                htmlFor={field.name}
-                className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <input
+            <Field>
+              <FieldLabel htmlFor={field.name}>Contraseña</FieldLabel>
+              <Input
                 id={field.name}
-                name={field.name}
                 type="password"
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 placeholder="••••••••"
               />
               {field.state.meta.isTouched && field.state.meta.errors && (
-                <p className="text-sm text-red-600">
+                <p className="text-xs text-red-600">
                   {field.state.meta.errors[0]}
                 </p>
               )}
-            </div>
+            </Field>
           )}
         />
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
-          {loading ? "Logging in..." : "Login"}
-        </button>
+        <Button type="submit" disabled={loading} className="w-full">
+          {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
+        </Button>
 
         <p className="text-center text-sm text-gray-600">
-          Don't have an account?{" "}
+          ¿No tienes cuenta?{" "}
           <Link href="/signup" className="text-blue-600 hover:underline">
-            Sign up
+            Regístrate
           </Link>
         </p>
       </form>
