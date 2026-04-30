@@ -1,5 +1,5 @@
 import { users } from "@/src/db/schema";
-import { db } from "@/src/lib/db";
+import { db } from "@/src/db";
 
 export async function GET() {
   try {

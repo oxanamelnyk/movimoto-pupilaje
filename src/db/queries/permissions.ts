@@ -1,4 +1,4 @@
-import { db } from "@/lib/db";
+import { db } from "../index";
 import { platformMemberships } from "@/db/schema/platform_membership";
 import { users } from "@/db/schema/users";
 import { eq } from "drizzle-orm";
