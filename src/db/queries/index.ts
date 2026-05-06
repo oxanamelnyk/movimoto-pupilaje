@@ -1,6 +1,7 @@
 // Database query functions
 // Keep queries separated by domain:
-// Example structure:
-// export * from "./invoices";
-// export * from "./clients";
-// export * from "./products";
+export * from "./clients";
+export * from "./locations";
+export * from "./vehicles";
+export * from "./vehicle_storage_records";
+export * from "./permissions";

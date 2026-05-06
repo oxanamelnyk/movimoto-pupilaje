@@ -13,11 +13,36 @@ import {
 import { Card } from "@/components/ui/card";
 import { VehiclesTable } from "./components/vehicles-table";
 import { mockVehicles, type Vehicle } from "./data/mock-vehicles";
+import { AddVehicleDrawer } from "@/components/vehicles/AddVehicleDrawer";
+import {
+  AddVehicleForm,
+  type VehicleStorageFormData,
+} from "@/components/vehicles/AddVehicleForm";
+import {
+  useClients,
+  useLocations,
+  useCreateVehicleStorageRecord,
+} from "@/src/hooks/useClients";
 
 export default function StoragePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // Fetch data with TanStack Query
+  const { data: clients = [], isLoading: clientsLoading } = useClients();
+  const { data: locations = [], isLoading: locationsLoading } = useLocations();
+  const createStorageRecord = useCreateVehicleStorageRecord();
+
+  const handleAddVehicle = async (data: VehicleStorageFormData) => {
+    try {
+      await createStorageRecord.mutateAsync(data);
+      setIsDrawerOpen(false);
+    } catch (error) {
+      console.error("Error adding vehicle:", error);
+    }
+  };
 
   const filteredVehicles = mockVehicles.filter((vehicle: Vehicle) => {
     const matchesSearch =
@@ -37,19 +62,17 @@ export default function StoragePage() {
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div
-        className="flex w-full items-center gap-2 bg-zinc-500 py-4 px-4 rounded-lg"
+        className="flex w-full items-center gap-2 "
         style={{ justifyContent: "space-between" }}>
         <div>
-          <h1
-            className="text-3xl font-bold tracking-tight"
-            style={{ color: "#ef4444" }}>
+          <h1 className="text-3xl font-bold tracking-tight">
             Almacenamiento de Vehículos
           </h1>
-          <p className="text-white/80">
-            Gestiona todos los vehículos en almacenamiento
-          </p>
+          <p>Gestiona todos los vehículos en almacenamiento</p>
         </div>
-        <Button className="gap-2 shrink-0">
+        <Button
+          className="gap-2 shrink-0"
+          onClick={() => setIsDrawerOpen(true)}>
           <span>+</span> Añadir Vehículo
         </Button>
       </div>
@@ -66,11 +89,11 @@ export default function StoragePage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los clientes</SelectItem>
-                <SelectItem value="Zontes">Zontes</SelectItem>
-                <SelectItem value="Shamax">Shamax</SelectItem>
-                <SelectItem value="Ducati">Ducati</SelectItem>
-                <SelectItem value="Carbo">Carbo</SelectItem>
-                <SelectItem value="Quadis">Quadis</SelectItem>
+                {clients.map((client) => (
+                  <SelectItem key={client.id} value={client.name}>
+                    {client.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -120,6 +143,16 @@ export default function StoragePage() {
 
       {/* Table */}
       <VehiclesTable data={filteredVehicles} />
+
+      {/* Add Vehicle Drawer */}
+      <AddVehicleDrawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+        <AddVehicleForm
+          onSubmit={handleAddVehicle}
+          isLoading={createStorageRecord.isPending}
+          clients={clients}
+          locations={locations}
+        />
+      </AddVehicleDrawer>
     </div>
   );
 }
