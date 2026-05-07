@@ -22,7 +22,7 @@ import {
   useClients,
   useLocations,
   useCreateVehicleStorageRecord,
-} from "@/src/hooks/useClients";
+} from "@/hooks/useClients";
 
 export default function StoragePage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -46,7 +46,7 @@ export default function StoragePage() {
 
   const filteredVehicles = mockVehicles.filter((vehicle: Vehicle) => {
     const matchesSearch =
-      vehicle.plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vehicle.vin_or_plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
       vehicle.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
       vehicle.brand.toLowerCase().includes(searchTerm.toLowerCase());
 

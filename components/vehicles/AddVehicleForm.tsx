@@ -203,7 +203,7 @@ export function AddVehicleForm({
                   name="vin_or_plate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>VIN / Placa</FormLabel>
+                      <FormLabel>Bastidor/Matricula </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Ingrese VIN o número de placa"
@@ -389,12 +389,12 @@ export function AddVehicleForm({
                   name="unpacking_date"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Fecha de Desempaque</FormLabel>
+                      <FormLabel>Fecha de Desencaje</FormLabel>
                       <FormControl>
                         <DatePicker
                           value={field.value}
                           onChange={field.onChange}
-                          placeholder="Seleccionar fecha de desempaque"
+                          placeholder="Seleccionar fecha de desencaje"
                         />
                       </FormControl>
                       <FormMessage />
@@ -406,7 +406,7 @@ export function AddVehicleForm({
                   name="unpacking_type"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tipo de Desempaque</FormLabel>
+                      <FormLabel>Tipo de Desencaje</FormLabel>
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}>
@@ -416,15 +416,8 @@ export function AddVehicleForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="full">
-                            Desempaque Completo
-                          </SelectItem>
-                          <SelectItem value="partial">
-                            Desempaque Parcial
-                          </SelectItem>
-                          <SelectItem value="inspection">
-                            Solo Inspección
-                          </SelectItem>
+                          <SelectItem value="full">Con montaje</SelectItem>
+                          <SelectItem value="partial">Sin montaje</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

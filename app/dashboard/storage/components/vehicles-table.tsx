@@ -23,50 +23,110 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const columns: ColumnDef<Vehicle>[] = [
   {
-    accessorKey: "client",
-    header: "Cliente",
-    cell: ({ row }) => (
-      <span className="font-medium">{row.getValue("client")}</span>
-    ),
-  },
-  {
     accessorKey: "status",
-    header: "Estado",
+    header: "ESTADO",
     cell: ({ row }) => {
-      const status = row.getValue("status") as "IN" | "OUT";
+      const status = row.getValue("status") as string;
       return (
         <Badge
-          variant={status === "IN" ? "default" : "destructive"}
-          className={status === "IN" ? "bg-green-600" : "bg-red-600"}>
-          {status === "IN" ? "Ingresado" : "Retirado"}
+          variant={status === "Ingresado" ? "default" : "destructive"}
+          className={status === "Ingresado" ? "bg-green-600" : "bg-red-600 text-white"}>
+          {status}
         </Badge>
       );
     },
   },
   {
-    accessorKey: "brand",
-    header: "Marca",
+    id: "mesEntrada",
+    header: "MES ENTRADA",
+    cell: ({ row }) => {
+      const date = row.original.entryDate as string;
+      return date.split("/")[1]; // Extract month
+    },
+  },
+  {
+    id: "diaEntrada",
+    header: "DIA ENTRADA",
+    cell: ({ row }) => {
+      const date = row.original.entryDate as string;
+      return date.split("/")[0]; // Extract day
+    },
+  },
+  {
+    id: "mesSortida",
+    header: "MES SORTIDA",
+    cell: ({ row }) => {
+      const date = row.original.exitDate as string | undefined;
+      return date ? date.split("/")[1] : "—";
+    },
+  },
+  {
+    id: "diaSortida",
+    header: "DIA SORTIDA",
+    cell: ({ row }) => {
+      const date = row.original.exitDate as string | undefined;
+      return date ? date.split("/")[0] : "—";
+    },
+  },
+  {
+    id: "totalDays",
+    header: "DIAS TOTAL",
+    cell: ({ row }) => {
+      const entryDate = row.original.entryDate;
+      const exitDate = row.original.exitDate;
+      if (!entryDate || !exitDate) return "—";
+
+      const [entryDay, entryMonth, entryYear] = entryDate
+        .split("/")
+        .map(Number);
+      const [exitDay, exitMonth, exitYear] = exitDate.split("/").map(Number);
+
+      const start = new Date(entryYear, entryMonth - 1, entryDay);
+      const end = new Date(exitYear, exitMonth - 1, exitDay);
+      const days = Math.floor(
+        (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      return days;
+    },
+  },
+  {
+    accessorKey: "requestDate",
+    header: "FECHA PETICION",
+    cell: ({ row }) => row.getValue("requestDate") || "—",
+  },
+  {
+    accessorKey: "requestedBy",
+    header: "QUIEN PIDE",
+    cell: ({ row }) => row.getValue("requestedBy") || "—",
   },
   {
     accessorKey: "model",
-    header: "Modelo",
+    header: "MODEL",
   },
   {
-    accessorKey: "plate",
-    header: "Placa / VIN",
+    accessorKey: "vin_or_plate",
+    header: "BASTIDOR/MATRICULA",
   },
   {
-    accessorKey: "entryDate",
-    header: "Fecha de Entrada",
+    accessorKey: "destination",
+    header: "DESTINO",
+    cell: ({ row }) => row.getValue("destination") || "—",
   },
   {
-    accessorKey: "exitDate",
-    header: "Fecha de Salida",
-    cell: ({ row }) => row.getValue("exitDate") || "—",
+    accessorKey: "notes",
+    header: "ANOTACIONES",
+    cell: ({ row }) => row.getValue("notes") || "—",
   },
   {
-    accessorKey: "location",
-    header: "Ubicación",
+    accessorKey: "unpackingDate",
+    header: "UBICACION FECHA DESENAJE",
+    cell: ({ row }) => row.getValue("unpackingDate") || "—",
+  },
+  {
+    accessorKey: "unpackingType",
+    header: "TIPO DESENCAJE",
+    cell: ({ row }) => row.getValue("unpackingType") || "—",
   },
 ];
 

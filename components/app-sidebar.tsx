@@ -37,9 +37,8 @@ const data = {
 
   navMain: [
     {
-      title: "Pupilaje",
+      title: "Gestion",
       url: "/dashboard/storage",
-      icon: Motorbike,
       isActive: true,
     },
   ],
