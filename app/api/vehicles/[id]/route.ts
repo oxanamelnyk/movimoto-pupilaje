@@ -3,7 +3,6 @@ import { vehicleUpdateSchema } from "@/validators/vehicles";
 import { getVehicleById } from "@/db/queries";
 import { deleteVehicle, updateVehicle } from "@/db/mutations";
 
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },

@@ -10,17 +10,12 @@ export async function createVehicle(data: VehicleCreate) {
     ...data,
     created_at: new Date(),
   };
-  await db
-    .insert(vehicles)
-    .values(vehicle);
+  await db.insert(vehicles).values(vehicle);
   return vehicle;
 }
 
 export async function updateVehicle(id: string, data: VehicleUpdate) {
-  await db
-    .update(vehicles)
-    .set(data)
-    .where(eq(vehicles.id, id));
+  await db.update(vehicles).set(data).where(eq(vehicles.id, id));
   // Fetch the updated vehicle
   const result = await db.select().from(vehicles).where(eq(vehicles.id, id));
   return result[0] || null;

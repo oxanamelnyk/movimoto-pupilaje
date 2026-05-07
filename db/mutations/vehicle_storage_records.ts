@@ -26,9 +26,7 @@ export async function createVehicleStorageRecord(
     created_at: new Date(),
     updated_at: new Date(),
   };
-  await db
-    .insert(vehicle_storage_records)
-    .values(record);
+  await db.insert(vehicle_storage_records).values(record);
   return record;
 }
 

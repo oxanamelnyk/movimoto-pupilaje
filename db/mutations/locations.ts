@@ -10,17 +10,12 @@ export async function createLocation(data: LocationCreate) {
     ...data,
     created_at: new Date(),
   };
-  await db
-    .insert(locations)
-    .values(location);
+  await db.insert(locations).values(location);
   return location;
 }
 
 export async function updateLocation(id: string, data: LocationUpdate) {
-  await db
-    .update(locations)
-    .set(data)
-    .where(eq(locations.id, id));
+  await db.update(locations).set(data).where(eq(locations.id, id));
   // Fetch the updated location
   const result = await db.select().from(locations).where(eq(locations.id, id));
   return result[0] || null;

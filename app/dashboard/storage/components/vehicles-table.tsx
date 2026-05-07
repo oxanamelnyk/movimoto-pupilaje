@@ -30,7 +30,9 @@ const columns: ColumnDef<Vehicle>[] = [
       return (
         <Badge
           variant={status === "Ingresado" ? "default" : "destructive"}
-          className={status === "Ingresado" ? "bg-green-600" : "bg-red-600 text-white"}>
+          className={
+            status === "Ingresado" ? "bg-green-600" : "bg-red-600 text-white"
+          }>
           {status}
         </Badge>
       );

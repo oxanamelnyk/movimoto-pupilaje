@@ -10,17 +10,12 @@ export async function createClient(data: ClientCreate) {
     ...data,
     created_at: new Date(),
   };
-  await db
-    .insert(clients)
-    .values(client);
+  await db.insert(clients).values(client);
   return client;
 }
 
 export async function updateClient(id: string, data: ClientUpdate) {
-  await db
-    .update(clients)
-    .set(data)
-    .where(eq(clients.id, id));
+  await db.update(clients).set(data).where(eq(clients.id, id));
   // Fetch the updated client
   const result = await db.select().from(clients).where(eq(clients.id, id));
   return result[0] || null;

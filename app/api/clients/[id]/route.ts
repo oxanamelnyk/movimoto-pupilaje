@@ -3,7 +3,6 @@ import { clientUpdateSchema } from "@/validators/clients";
 import { getClientById } from "@/db/queries";
 import { deleteClient, updateClient } from "@/db/mutations";
 
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },

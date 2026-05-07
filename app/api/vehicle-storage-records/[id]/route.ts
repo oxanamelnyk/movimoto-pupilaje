@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { vehicleStorageRecordUpdateSchema } from "@/validators/vehicle_storage_records";
 import { getVehicleStorageRecordById } from "@/db/queries";
-import { deleteVehicleStorageRecord, updateVehicleStorageRecord } from "@/db/mutations";
-
+import {
+  deleteVehicleStorageRecord,
+  updateVehicleStorageRecord,
+} from "@/db/mutations";
 
 export async function GET(
   request: NextRequest,
