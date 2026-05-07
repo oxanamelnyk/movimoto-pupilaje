@@ -41,12 +41,12 @@ async function main() {
     console.log("\n✅ All migrations applied successfully!");
 
     // Verify tables were created
-    const tables = await db.execute(
+    const result = await db.execute(
       sql`SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ('clients', 'locations', 'vehicles', 'vehicle_storage_records')`,
-    );
+    ) as unknown as [Array<{ TABLE_NAME: string }>, any];
 
     console.log("\n📊 Created tables:");
-    const tableNames = tables[0].map((row: any) => row.TABLE_NAME);
+    const tableNames = result[0].map((row) => row.TABLE_NAME);
     tableNames.forEach((name: string) => console.log(`   ✓ ${name}`));
   } catch (error) {
     console.error("\n❌ Migration failed:");

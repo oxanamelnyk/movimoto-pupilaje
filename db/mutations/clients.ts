@@ -5,22 +5,24 @@ import { ClientCreate, ClientUpdate } from "@/validators/clients";
 
 export async function createClient(data: ClientCreate) {
   const id = crypto.randomUUID();
-  const result = await db
+  const client = {
+    id,
+    ...data,
+    created_at: new Date(),
+  };
+  await db
     .insert(clients)
-    .values({
-      id,
-      ...data,
-    })
-    .returning();
-  return result[0];
+    .values(client);
+  return client;
 }
 
 export async function updateClient(id: string, data: ClientUpdate) {
-  const result = await db
+  await db
     .update(clients)
     .set(data)
-    .where(eq(clients.id, id))
-    .returning();
+    .where(eq(clients.id, id));
+  // Fetch the updated client
+  const result = await db.select().from(clients).where(eq(clients.id, id));
   return result[0] || null;
 }
 

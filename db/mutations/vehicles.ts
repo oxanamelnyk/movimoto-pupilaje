@@ -5,22 +5,24 @@ import { VehicleCreate, VehicleUpdate } from "@/validators/vehicles";
 
 export async function createVehicle(data: VehicleCreate) {
   const id = crypto.randomUUID();
-  const result = await db
+  const vehicle = {
+    id,
+    ...data,
+    created_at: new Date(),
+  };
+  await db
     .insert(vehicles)
-    .values({
-      id,
-      ...data,
-    })
-    .returning();
-  return result[0];
+    .values(vehicle);
+  return vehicle;
 }
 
 export async function updateVehicle(id: string, data: VehicleUpdate) {
-  const result = await db
+  await db
     .update(vehicles)
     .set(data)
-    .where(eq(vehicles.id, id))
-    .returning();
+    .where(eq(vehicles.id, id));
+  // Fetch the updated vehicle
+  const result = await db.select().from(vehicles).where(eq(vehicles.id, id));
   return result[0] || null;
 }
 

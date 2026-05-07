@@ -108,7 +108,7 @@ export function AddVehicleForm({
                 <FormField
                   control={form.control}
                   name="client_id"
-                  render={({ field }) => (
+                  render={({ field }: any) => (
                     <FormItem>
                       <FormLabel>Cliente</FormLabel>
                       <Select
@@ -134,7 +134,7 @@ export function AddVehicleForm({
                 <FormField
                   control={form.control}
                   name="status"
-                  render={({ field }) => (
+                  render={({ field }: any) => (
                     <FormItem>
                       <FormLabel>Estado</FormLabel>
                       <Select
@@ -172,7 +172,7 @@ export function AddVehicleForm({
                 <FormField
                   control={form.control}
                   name="brand"
-                  render={({ field }) => (
+                  render={({ field }: any) => (
                     <FormItem>
                       <FormLabel>Marca</FormLabel>
                       <FormControl>
@@ -185,7 +185,7 @@ export function AddVehicleForm({
                 <FormField
                   control={form.control}
                   name="model"
-                  render={({ field }) => (
+                  render={({ field }: any) => (
                     <FormItem>
                       <FormLabel>Modelo</FormLabel>
                       <FormControl>
@@ -201,7 +201,7 @@ export function AddVehicleForm({
                 <FormField
                   control={form.control}
                   name="vin_or_plate"
-                  render={({ field }) => (
+                  render={({ field }: any) => (
                     <FormItem>
                       <FormLabel>Bastidor/Matricula </FormLabel>
                       <FormControl>
@@ -217,7 +217,7 @@ export function AddVehicleForm({
                 <FormField
                   control={form.control}
                   name="color"
-                  render={({ field }) => (
+                  render={({ field }: any) => (
                     <FormItem>
                       <FormLabel>Color</FormLabel>
                       <FormControl>
@@ -249,7 +249,7 @@ export function AddVehicleForm({
                 <FormField
                   control={form.control}
                   name="entry_date"
-                  render={({ field }) => (
+                  render={({ field }: any) => (
                     <FormItem>
                       <FormLabel>Fecha de Entrada</FormLabel>
                       <FormControl>
@@ -266,7 +266,7 @@ export function AddVehicleForm({
                 <FormField
                   control={form.control}
                   name="exit_date"
-                  render={({ field }) => (
+                  render={({ field }: any) => (
                     <FormItem>
                       <FormLabel>Fecha de Salida</FormLabel>
                       <FormControl>
@@ -292,7 +292,7 @@ export function AddVehicleForm({
                 <FormField
                   control={form.control}
                   name="location_id"
-                  render={({ field }) => (
+                  render={({ field }: any) => (
                     <FormItem>
                       <FormLabel>Ubicación</FormLabel>
                       <Select
@@ -320,7 +320,7 @@ export function AddVehicleForm({
               <FormField
                 control={form.control}
                 name="destination"
-                render={({ field }) => (
+                render={({ field }: any) => (
                   <FormItem>
                     <FormLabel>Destino / Lugar de Entrega</FormLabel>
                     <FormControl>
@@ -354,7 +354,7 @@ export function AddVehicleForm({
                 <FormField
                   control={form.control}
                   name="request_date"
-                  render={({ field }) => (
+                  render={({ field }: any) => (
                     <FormItem>
                       <FormLabel>Fecha de Solicitud</FormLabel>
                       <FormControl>
@@ -371,7 +371,7 @@ export function AddVehicleForm({
                 <FormField
                   control={form.control}
                   name="requested_by"
-                  render={({ field }) => (
+                  render={({ field }: any) => (
                     <FormItem>
                       <FormLabel>Solicitado Por</FormLabel>
                       <FormControl>
@@ -387,7 +387,7 @@ export function AddVehicleForm({
                 <FormField
                   control={form.control}
                   name="unpacking_date"
-                  render={({ field }) => (
+                  render={({ field }: any) => (
                     <FormItem>
                       <FormLabel>Fecha de Desencaje</FormLabel>
                       <FormControl>
@@ -404,7 +404,7 @@ export function AddVehicleForm({
                 <FormField
                   control={form.control}
                   name="unpacking_type"
-                  render={({ field }) => (
+                  render={({ field }: any) => (
                     <FormItem>
                       <FormLabel>Tipo de Desencaje</FormLabel>
                       <Select
@@ -443,7 +443,7 @@ export function AddVehicleForm({
               <FormField
                 control={form.control}
                 name="notes"
-                render={({ field }) => (
+                render={({ field }: any) => (
                   <FormItem>
                     <FormLabel>
                       Notas / Anotaciones / Otra Información

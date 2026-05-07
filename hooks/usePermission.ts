@@ -7,7 +7,7 @@ import {
   hasAllPermissions,
   hasAnyPermission,
   hasPermission,
-} from "../db/lib/permissions/checker";
+} from "../lib/permissions/checker";
 
 interface UsePermissionProps {
   role: RoleType | null;

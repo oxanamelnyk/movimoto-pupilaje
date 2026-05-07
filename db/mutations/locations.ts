@@ -5,22 +5,24 @@ import { LocationCreate, LocationUpdate } from "@/validators/locations";
 
 export async function createLocation(data: LocationCreate) {
   const id = crypto.randomUUID();
-  const result = await db
+  const location = {
+    id,
+    ...data,
+    created_at: new Date(),
+  };
+  await db
     .insert(locations)
-    .values({
-      id,
-      ...data,
-    })
-    .returning();
-  return result[0];
+    .values(location);
+  return location;
 }
 
 export async function updateLocation(id: string, data: LocationUpdate) {
-  const result = await db
+  await db
     .update(locations)
     .set(data)
-    .where(eq(locations.id, id))
-    .returning();
+    .where(eq(locations.id, id));
+  // Fetch the updated location
+  const result = await db.select().from(locations).where(eq(locations.id, id));
   return result[0] || null;
 }
 
