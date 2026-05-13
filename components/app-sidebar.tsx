@@ -38,7 +38,7 @@ const data = {
   navMain: [
     {
       title: "Gestion",
-      url: "/dashboard/storage",
+      url: "/dashboard",
       isActive: true,
     },
   ],
@@ -55,7 +55,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           height={40}
           quality={100}
           priority
-          style={{ objectFit: "contain" }}
+          style={{ objectFit: "contain", maxWidth: "100%" }}
+          className="w-full"
         />
       </SidebarHeader>
       <SidebarContent>

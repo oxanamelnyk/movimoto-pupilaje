@@ -24,9 +24,9 @@ export function AddVehicleDrawer({
     <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="overflow-y-auto overflow-x-hidden">
         <DrawerHeader>
-          <DrawerTitle>Add New Vehicle</DrawerTitle>
+          <DrawerTitle>Agregar Nuevo Vehículo</DrawerTitle>
           <DrawerDescription>
-            Add vehicle and storage information
+            Agregar información del vehículo y almacenamiento
           </DrawerDescription>
         </DrawerHeader>
 

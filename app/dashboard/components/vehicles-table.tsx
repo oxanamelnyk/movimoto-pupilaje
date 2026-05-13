@@ -155,14 +155,14 @@ export function VehiclesTable({ data }: VehiclesTableProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
+      <Card>
+        <div className="">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className="whitespace-nowrap">
+                    <TableHead key={header.id}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -179,7 +179,9 @@ export function VehiclesTable({ data }: VehiclesTableProps) {
                 table.getRowModel().rows.map((row) => (
                   <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="py-3">
+                      <TableCell
+                        key={cell.id}
+                        className="py-3 whitespace-nowrap">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),

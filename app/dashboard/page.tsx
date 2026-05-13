@@ -1,12 +1,62 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { AddVehicleDrawer } from "@/components/vehicles/AddVehicleDrawer";
+import {
+  AddVehicleForm,
+  type VehicleStorageFormData,
+} from "@/components/vehicles/AddVehicleForm";
+import {
+  useClients,
+  useLocations,
+  useCreateVehicleStorageRecord,
+} from "@/hooks/useClients";
+
 export default function Page() {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // Fetch data with TanStack Query
+  const { data: clients = [], isLoading: clientsLoading } = useClients();
+  const { data: locations = [], isLoading: locationsLoading } = useLocations();
+  const createStorageRecord = useCreateVehicleStorageRecord();
+
+  const handleAddVehicle = async (data: VehicleStorageFormData) => {
+    try {
+      await createStorageRecord.mutateAsync(data);
+      setIsDrawerOpen(false);
+    } catch (error) {
+      console.error("Error adding vehicle:", error);
+    }
+  };
+
   return (
-    <div>
-      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-        <div className="aspect-video rounded-xl bg-muted/50" />
-        <div className="aspect-video rounded-xl bg-muted/50" />
-        <div className="aspect-video rounded-xl bg-muted/50" />
+    <div className="flex flex-col gap-6">
+      {/* Header */}
+      <div className="flex w-full items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Almacenamiento de Vehículos
+          </h1>
+          <p>Gestiona todos los vehículos en almacenamiento</p>
+        </div>
+        <Button
+          className="gap-2 shrink-0"
+          onClick={() => setIsDrawerOpen(true)}>
+          <span>+</span> Añadir Vehículo
+        </Button>
       </div>
-      <div className="min-h-screen flex-1 rounded-xl bg-muted/50 md:min-h-min" />
+     {/* Table */}
+
+      {/* Add Vehicle Drawer */}
+      <AddVehicleDrawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+        <AddVehicleForm
+          onSubmit={handleAddVehicle}
+          isLoading={createStorageRecord.isPending}
+          clients={clients}
+          locations={locations}
+        />
+      </AddVehicleDrawer>
     </div>
   );
 }
