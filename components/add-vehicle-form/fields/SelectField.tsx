@@ -1,4 +1,4 @@
-import { Control, FieldPath, FieldValues } from "react-hook-form";
+import { Control, FieldPath, FieldValues, ControllerRenderProps } from "react-hook-form";
 import {
   Select,
   SelectContent,
@@ -20,6 +20,7 @@ type SelectFieldProps<T extends FieldValues> = {
   label: string;
   placeholder?: string;
   options: Array<{ value: string; label: string }>;
+  disabled?: boolean;
 };
 
 export function SelectField<T extends FieldValues>({
@@ -28,15 +29,16 @@ export function SelectField<T extends FieldValues>({
   label,
   placeholder,
   options,
+  disabled,
 }: SelectFieldProps<T>) {
   return (
     <FormField
       control={control}
       name={name}
-      render={({ field }) => (
+      render={({ field }: { field: ControllerRenderProps<T, FieldPath<T>> }) => (
         <FormItem>
           <FormLabel>{label}</FormLabel>
-          <Select value={field.value} onValueChange={field.onChange}>
+          <Select value={field.value} onValueChange={field.onChange} disabled={disabled}>
             <FormControl>
               <SelectTrigger>
                 <SelectValue placeholder={placeholder} />

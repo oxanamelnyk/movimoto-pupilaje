@@ -2,8 +2,22 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { VehicleStorageFormData } from "@/components/vehicles/AddVehicleForm";
 
 export interface Client {
-  id: string;
-  name: string;
+  id_cliente: number;
+  tipo_cliente: "empresa" | "particular";
+  nombre_comercial: string | null;
+  nombre_fiscal: string | null;
+  dni_nif: string | null;
+  email: string | null;
+  telefono: string | null;
+  notas: string | null;
+  calle: string | null;
+  provincia: string | null;
+  pais: string | null;
+  codigo_postal: string | null;
+  ciudad: string | null;
+  fecha_registro: Date | null;
+  ocultar_info_econ: boolean;
+  es_pupilaje: boolean;
 }
 
 export interface Location {

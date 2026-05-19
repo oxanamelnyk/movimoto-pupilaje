@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ZodError } from "zod";
 import { clientCreateSchema } from "@/validators/clients";
 import { createClient } from "@/db/mutations";
-import { getClients } from "@/db/queries";
+import { getPupilajeclients } from "@/db/queries";
 
 export async function GET() {
   try {
-    const clients = await getClients();
+    const clients = await getPupilajeclients();
     return NextResponse.json(clients);
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error("Failed to fetch clients:", error);
     return NextResponse.json(
       { error: "Failed to fetch clients" },
       { status: 500 },
@@ -21,10 +23,10 @@ export async function POST(request: NextRequest) {
     const data = clientCreateSchema.parse(body);
     const client = await createClient(data);
     return NextResponse.json(client, { status: 201 });
-  } catch (error: any) {
-    if (error.name === "ZodError") {
+  } catch (error: unknown) {
+    if (error instanceof ZodError) {
       return NextResponse.json(
-        { error: "Validation error", details: error.errors },
+        { error: "Validation error", details: error.issues },
         { status: 400 },
       );
     }

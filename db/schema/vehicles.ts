@@ -1,4 +1,4 @@
-import { mysqlTable, varchar, timestamp } from "drizzle-orm/mysql-core";
+import { mysqlTable, varchar, timestamp, mysqlEnum } from "drizzle-orm/mysql-core";
 import { clients } from "./clients";
 
 export const vehicles = mysqlTable("vehicles", {
@@ -10,5 +10,6 @@ export const vehicles = mysqlTable("vehicles", {
   model: varchar({ length: 255 }).notNull(),
   vin_or_plate: varchar({ length: 255 }).notNull(),
   color: varchar({ length: 255 }),
+  estado: mysqlEnum(["entrega", "preparacion", "salida"]).default("preparacion"),
   created_at: timestamp().defaultNow(),
 });

@@ -19,7 +19,7 @@ export type { VehicleStorageFormData };
 interface AddVehicleFormProps {
   onSubmit: (data: VehicleStorageFormData) => Promise<void>;
   isLoading?: boolean;
-  clients?: Array<{ id: string; name: string }>;
+  clients?: Array<{ id_cliente: number; nombre_comercial: string | null }>;
   locations?: Array<{ id: string; name: string }>;
 }
 

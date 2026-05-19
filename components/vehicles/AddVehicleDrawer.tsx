@@ -6,6 +6,7 @@ import {
   DrawerContent,
   DrawerDescription,
   DrawerHeader,
+  DrawerOverlay,
   DrawerTitle,
 } from "@/components/ui/drawer";
 

@@ -6,6 +6,7 @@ export const defaultValues: VehicleStorageFormData = {
   model: "",
   vin_or_plate: "",
   color: "",
+  estado: "entrega",
   status: "IN",
   entry_date: new Date().toISOString().split("T")[0],
   exit_date: "",

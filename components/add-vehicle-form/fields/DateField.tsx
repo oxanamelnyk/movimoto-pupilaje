@@ -1,4 +1,4 @@
-import { Control, FieldPath, FieldValues } from "react-hook-form";
+import { Control, FieldPath, FieldValues, ControllerRenderProps } from "react-hook-form";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   FormField,
@@ -25,7 +25,7 @@ export function DateField<T extends FieldValues>({
     <FormField
       control={control}
       name={name}
-      render={({ field }) => (
+      render={({ field }: { field: ControllerRenderProps<T, FieldPath<T>> }) => (
         <FormItem>
           <FormLabel>{label}</FormLabel>
           <FormControl>

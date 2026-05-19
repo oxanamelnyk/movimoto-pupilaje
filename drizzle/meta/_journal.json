@@ -22,6 +22,20 @@
       "when": 1778068104647,
       "tag": "0002_closed_alice",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1779097422485,
+      "tag": "0003_nostalgic_mandrill",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1779098504609,
+      "tag": "0004_familiar_venom",
+      "breakpoints": true
     }
   ]
 }

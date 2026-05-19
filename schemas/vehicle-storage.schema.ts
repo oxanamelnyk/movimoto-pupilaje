@@ -6,6 +6,7 @@ export const vehicleStorageFormSchema = z.object({
   model: z.string().min(1, "Se requiere modelo"),
   vin_or_plate: z.string().min(1, "Se requiere VIN o placa"),
   color: z.string().optional(),
+  estado: z.enum(["entrega", "preparacion", "salida"]),
   status: z.enum(["IN", "OUT"]),
   entry_date: z.string().min(1, "Se requiere fecha de entrada"),
   exit_date: z.string().optional(),

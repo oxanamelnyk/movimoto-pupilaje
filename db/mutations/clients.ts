@@ -4,23 +4,26 @@ import { eq } from "drizzle-orm";
 import { ClientCreate, ClientUpdate } from "@/validators/clients";
 
 export async function createClient(data: ClientCreate) {
-  const id = crypto.randomUUID();
-  const client = {
-    id,
-    ...data,
-    created_at: new Date(),
-  };
-  await db.insert(clients).values(client);
-  return client;
+  const result = await db.insert(clients).values(data);
+  const clientId = result.insertId;
+  const client = await db
+    .select()
+    .from(clients)
+    .where(eq(clients.id_cliente, Number(clientId)))
+    .limit(1);
+  return client[0] || null;
 }
 
-export async function updateClient(id: string, data: ClientUpdate) {
-  await db.update(clients).set(data).where(eq(clients.id, id));
-  // Fetch the updated client
-  const result = await db.select().from(clients).where(eq(clients.id, id));
+export async function updateClient(id: number, data: ClientUpdate) {
+  await db.update(clients).set(data).where(eq(clients.id_cliente, id));
+  const result = await db
+    .select()
+    .from(clients)
+    .where(eq(clients.id_cliente, id))
+    .limit(1);
   return result[0] || null;
 }
 
-export async function deleteClient(id: string) {
-  await db.delete(clients).where(eq(clients.id, id));
+export async function deleteClient(id: number) {
+  await db.delete(clients).where(eq(clients.id_cliente, id));
 }

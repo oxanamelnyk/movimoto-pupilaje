@@ -36,14 +36,14 @@ export default function Page() {
       <div className="flex w-full items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Almacenamiento de Vehículos
+            Almacenamiento de Motos
           </h1>
-          <p>Gestiona todos los vehículos en almacenamiento</p>
+          <p>Gestiona todos los motos en almacenamiento</p>
         </div>
         <Button
           className="gap-2 shrink-0"
           onClick={() => setIsDrawerOpen(true)}>
-          <span>+</span> Añadir Vehículo
+          <span>+</span> Añadir Moto
         </Button>
       </div>
      {/* Table */}

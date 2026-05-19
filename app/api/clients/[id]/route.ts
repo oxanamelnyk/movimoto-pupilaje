@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ZodError } from "zod";
 import { clientUpdateSchema } from "@/validators/clients";
 import { getClientById } from "@/db/queries";
 import { deleteClient, updateClient } from "@/db/mutations";
@@ -10,7 +11,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const id = (await params).id;
+    const id = Number((await params).id);
     const client = await getClientById(id);
     if (!client) {
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
@@ -29,7 +30,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const id = (await params).id;
+    const id = Number((await params).id);
     const body = await request.json();
     const data = clientUpdateSchema.parse(body);
     const client = await updateClient(id, data);
@@ -37,10 +38,10 @@ export async function PATCH(
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
     }
     return NextResponse.json(client);
-  } catch (error: any) {
-    if (error.name === "ZodError") {
+  } catch (error: unknown) {
+    if (error instanceof ZodError) {
       return NextResponse.json(
-        { error: "Validation error", details: error.errors },
+        { error: "Validation error", details: error.issues },
         { status: 400 },
       );
     }
@@ -56,7 +57,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const id = (await params).id;
+    const id = Number((await params).id);
     await deleteClient(id);
     return NextResponse.json({ success: true });
   } catch (error) {
