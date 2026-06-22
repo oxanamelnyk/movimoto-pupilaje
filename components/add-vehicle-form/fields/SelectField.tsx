@@ -38,7 +38,15 @@ export function SelectField<T extends FieldValues>({
       render={({ field }: { field: ControllerRenderProps<T, FieldPath<T>> }) => (
         <FormItem>
           <FormLabel>{label}</FormLabel>
-          <Select value={field.value} onValueChange={field.onChange} disabled={disabled}>
+          <Select 
+            value={field.value !== null && field.value !== undefined ? String(field.value) : ""} 
+            onValueChange={(value) => {
+              // Try to convert to number if the value is numeric
+              const numValue = !isNaN(Number(value)) && value !== "" ? Number(value) : value;
+              field.onChange(numValue);
+            }} 
+            disabled={disabled}
+          >
             <FormControl>
               <SelectTrigger>
                 <SelectValue placeholder={placeholder} />

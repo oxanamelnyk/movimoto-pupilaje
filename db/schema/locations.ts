@@ -1,7 +1,7 @@
-import { mysqlTable, varchar, timestamp } from "drizzle-orm/mysql-core";
+import { mysqlTable, int, varchar, timestamp } from "drizzle-orm/mysql-core";
 
 export const locations = mysqlTable("locations", {
-  id: varchar({ length: 255 }).primaryKey(),
+  id: int().primaryKey().autoincrement(),
   name: varchar({ length: 255 }).notNull(),
   created_at: timestamp().defaultNow(),
 });

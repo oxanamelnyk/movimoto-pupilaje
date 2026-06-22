@@ -1,22 +1,29 @@
 import { z } from "zod";
 
 export const vehicleStorageFormSchema = z.object({
-  client_id: z.string().min(1, "Se requiere cliente"),
-  brand: z.string().min(1, "Se requiere marca"),
-  model: z.string().min(1, "Se requiere modelo"),
-  vin_or_plate: z.string().min(1, "Se requiere VIN o placa"),
-  color: z.string().optional(),
-  estado: z.enum(["entrega", "preparacion", "salida"]),
-  status: z.enum(["IN", "OUT"]),
+  // Vehicle info
+  client_id: z.number().int("Se requiere cliente"),
+  brand_id: z.number().int("Se requiere marca"),
+  model_id: z.number().int("Se requiere modelo"),
+  color_id: z.number().int().optional().nullable(),
+  status_id: z.number().int("Se requiere estado"),
+  vin: z.string().optional().nullable(),
+  plate_number: z.string().optional().nullable(),
+  
+  // Storage info
   entry_date: z.string().min(1, "Se requiere fecha de entrada"),
-  exit_date: z.string().optional(),
-  location_id: z.string().min(1, "Se requiere ubicación"),
-  destination: z.string().optional(),
-  request_date: z.string().optional(),
-  requested_by: z.string().optional(),
-  unpacking_date: z.string().optional(),
-  unpacking_type: z.string().optional(),
-  notes: z.string().optional(),
+  exit_date: z.string().optional().nullable(),
+  location_id: z.number().int("Se requiere ubicación"),
+  delivery_place: z.string().optional().nullable(),
+  
+  // Preparation info
+  request_date: z.string().optional().nullable(),
+  requested_by: z.string().optional().nullable(),
+  preparation_date: z.string().optional().nullable(),
+  preparation_type_id: z.number().int().optional().nullable(),
+  
+  // Notes
+  notes: z.string().optional().nullable(),
 });
 
 export type VehicleStorageFormData = z.infer<typeof vehicleStorageFormSchema>;

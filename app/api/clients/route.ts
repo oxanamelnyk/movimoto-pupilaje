@@ -10,10 +10,8 @@ export async function GET() {
     return NextResponse.json(clients);
   } catch (error: unknown) {
     console.error("Failed to fetch clients:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch clients" },
-      { status: 500 },
-    );
+    // Return empty array on error (table might not exist)
+    return NextResponse.json([]);
   }
 }
 

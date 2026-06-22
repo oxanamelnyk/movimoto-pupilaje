@@ -1,32 +1,47 @@
 import { z } from "zod";
 
 export const vehicleCreateSchema = z.object({
-  client_id: z.string().min(1, "Client ID is required"),
-  brand: z.string().min(1, "Vehicle brand is required").max(255),
-  model: z.string().min(1, "Vehicle model is required").max(255),
-  vin_or_plate: z.string().min(1, "VIN or plate is required").max(255),
-  color: z.string().max(255).optional().nullable(),
+  client_id: z.number().int("Client ID must be a number"),
+  brand_id: z.number().int("Brand ID must be a number"),
+  model_id: z.number().int("Model ID must be a number"),
+  color_id: z.number().int().optional().nullable(),
+  status_id: z.number().int("Status ID must be a number"),
+  vin: z.string().optional().nullable(),
+  plate_number: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  // Storage info
+  entry_date: z.string().min(1, "Entry date is required"),
+  exit_date: z.string().optional().nullable(),
+  location_id: z.number().int("Location ID must be a number"),
+  delivery_place: z.string().optional().nullable(),
+  // Preparation info
+  request_date: z.string().optional().nullable(),
+  requested_by: z.string().optional().nullable(),
+  preparation_date: z.string().optional().nullable(),
+  preparation_type_id: z.number().int().optional().nullable(),
 });
 
 export const vehicleUpdateSchema = z.object({
-  client_id: z.string().min(1, "Client ID is required").optional(),
-  brand: z.string().min(1, "Vehicle brand is required").max(255).optional(),
-  model: z.string().min(1, "Vehicle model is required").max(255).optional(),
-  vin_or_plate: z
-    .string()
-    .min(1, "VIN or plate is required")
-    .max(255)
-    .optional(),
-  color: z.string().max(255).optional().nullable(),
+  client_id: z.number().int().optional(),
+  brand_id: z.number().int().optional(),
+  model_id: z.number().int().optional(),
+  color_id: z.number().int().optional().nullable(),
+  status_id: z.number().int().optional(),
+  vin: z.string().optional().nullable(),
+  plate_number: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
 });
 
 export const vehicleSchema = z.object({
-  id: z.string(),
-  client_id: z.string(),
-  brand: z.string(),
-  model: z.string(),
-  vin_or_plate: z.string(),
-  color: z.string().nullable(),
+  id: z.number().int(),
+  client_id: z.number().int(),
+  brand_id: z.number().int(),
+  model_id: z.number().int(),
+  color_id: z.number().int().nullable(),
+  status_id: z.number().int(),
+  vin: z.string().nullable(),
+  plate_number: z.string().nullable(),
+  notes: z.string().nullable(),
   created_at: z.date().nullable(),
 });
 

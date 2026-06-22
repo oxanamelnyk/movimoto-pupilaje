@@ -1,27 +1,56 @@
 "use client";
 
-import { Control, useWatch } from "react-hook-form";
+import { Control } from "react-hook-form";
 import { TextField } from "../fields/TextField";
 import { SelectField } from "../fields/SelectField";
-import { ComboboxField } from "../fields/ComboboxField";
 import { FormSection } from "../FormSection";
 import { VehicleStorageFormData } from "@/schemas/vehicle-storage.schema";
-import { useEstadoVehiculo } from "@/hooks/useEstadoVehiculo";
+import { useQuery } from "@tanstack/react-query";
 
 interface VehicleInfoSectionProps {
   control: Control<VehicleStorageFormData>;
-  clients: Array<{ id_cliente: number; nombre_comercial: string }>;
+  clients: Array<{ id: number; name: string }>;
 }
 
 export function VehicleInfoSection({
   control,
   clients,
 }: VehicleInfoSectionProps) {
-  const { options: estadoOptions, loading: estadoLoading } = useEstadoVehiculo();
-  const brand = useWatch({ control, name: "brand" });
-  const modelsUrl = brand
-    ? `/api/vehicles/models?brand=${encodeURIComponent(brand)}`
-    : "/api/vehicles/models";
+  // Fetch brands
+  const { data: brands = [] } = useQuery({
+    queryKey: ["brands"],
+    queryFn: async () => {
+      const res = await fetch("/api/brands");
+      return res.json();
+    },
+  });
+
+  // Fetch models
+  const { data: models = [] } = useQuery({
+    queryKey: ["models"],
+    queryFn: async () => {
+      const res = await fetch("/api/models");
+      return res.json();
+    },
+  });
+
+  // Fetch colors
+  const { data: colors = [] } = useQuery({
+    queryKey: ["colors"],
+    queryFn: async () => {
+      const res = await fetch("/api/colors");
+      return res.json();
+    },
+  });
+
+  // Fetch statuses
+  const { data: statuses = [] } = useQuery({
+    queryKey: ["vehicle-statuses"],
+    queryFn: async () => {
+      const res = await fetch("/api/vehicle-statuses");
+      return res.json();
+    },
+  });
 
   return (
     <FormSection icon="🚗" title="Información del Vehículo">
@@ -31,51 +60,59 @@ export function VehicleInfoSection({
           name="client_id"
           label="Cliente"
           placeholder="Seleccionar cliente"
-          options={clients.map((c) => ({ value: String(c.id_cliente), label: c.nombre_comercial || "" }))}
+          options={clients.map((c) => ({ value: String(c.id), label: c.name || "" }))}
         />
 
         <SelectField
           control={control}
-          name="estado"
+          name="status_id"
           label="Estado del Vehículo"
-          options={estadoOptions}
-          disabled={estadoLoading}
+          placeholder="Seleccionar estado"
+          options={statuses.map((s: any) => ({ value: String(s.id), label: s.name }))}
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <ComboboxField
+        <SelectField
           control={control}
-          name="brand"
+          name="brand_id"
           label="Marca"
-          placeholder="Buscar marca..."
-          fetchUrl="/api/vehicles/brands"
-          onCreateNew={(value) => console.log("New brand created:", value)}
+          placeholder="Seleccionar marca"
+          options={brands.map((b: any) => ({ value: String(b.id), label: b.name }))}
         />
 
-        <ComboboxField
+        <SelectField
           control={control}
-          name="model"
+          name="model_id"
           label="Modelo"
-          placeholder="Buscar modelo..."
-          fetchUrl={modelsUrl}
-          onCreateNew={(value) => console.log("New model created:", value)}
+          placeholder="Seleccionar modelo"
+          options={models.map((m: any) => ({ value: String(m.id), label: m.name }))}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <SelectField
+          control={control}
+          name="color_id"
+          label="Color"
+          placeholder="Seleccionar color"
+          options={colors.map((c: any) => ({ value: String(c.id), label: c.name }))}
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <TextField
           control={control}
-          name="vin_or_plate"
-          label="Bastidor/Matricula"
-          placeholder="Ingrese VIN o número de placa"
+          name="vin"
+          label="VIN (Bastidor)"
+          placeholder="Ingrese VIN"
         />
 
         <TextField
           control={control}
-          name="color"
-          label="Color"
-          placeholder="Ingrese el color"
+          name="plate_number"
+          label="Placa/Matrícula"
+          placeholder="Ingrese número de placa"
         />
       </div>
     </FormSection>

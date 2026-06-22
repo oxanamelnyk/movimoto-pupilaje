@@ -2,49 +2,49 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { VehicleStorageFormData } from "@/components/vehicles/AddVehicleForm";
 
 export interface Client {
-  id_cliente: number;
-  tipo_cliente: "empresa" | "particular";
-  nombre_comercial: string | null;
-  nombre_fiscal: string | null;
-  dni_nif: string | null;
+  id: number;
+  name: string;
+  phone: string | null;
   email: string | null;
-  telefono: string | null;
-  notas: string | null;
-  calle: string | null;
-  provincia: string | null;
-  pais: string | null;
-  codigo_postal: string | null;
-  ciudad: string | null;
-  fecha_registro: Date | null;
-  ocultar_info_econ: boolean;
-  es_pupilaje: boolean;
+  created_at: Date | null;
 }
 
 export interface Location {
-  id: string;
+  id: number;
   name: string;
 }
 
 export interface Vehicle {
-  id: string;
-  client_id: string;
-  brand: string;
-  model: string;
-  vin_or_plate: string;
-  color?: string | null;
+  id: number;
+  client_id: number;
+  brand_id: number;
+  model_id: number;
+  color_id?: number | null;
+  status_id: number;
+  vin?: string | null;
+  plate_number?: string | null;
+  notes?: string | null;
+  created_at?: Date | null;
 }
 
 export interface VehicleStorageRecord {
-  id: string;
-  vehicle_id: string;
-  location_id: string;
+  id: number;
+  vehicle_id: number;
+  location_id: number;
   entry_date: string;
   exit_date?: string | null;
+  delivery_place?: string | null;
+  created_at?: Date | null;
+}
+
+export interface VehiclePreparation {
+  id: number;
+  vehicle_id: number;
   request_date?: string | null;
   requested_by?: string | null;
-  unpacking_date?: string | null;
-  unpacking_type?: string | null;
-  notes?: string | null;
+  preparation_date?: string | null;
+  preparation_type_id?: number | null;
+  created_at?: Date | null;
 }
 
 // Clients Hook
@@ -88,31 +88,31 @@ export function useVehicleStorageRecords() {
   return useQuery<VehicleStorageRecord[]>({
     queryKey: ["vehicle-storage-records"],
     queryFn: async () => {
-      const response = await fetch("/api/vehicle-storage-records");
+      const response = await fetch("/api/vehicle-storage");
       if (!response.ok) throw new Error("Failed to fetch storage records");
       return response.json();
     },
   });
 }
 
-// Create Vehicle Storage Record Mutation
+// Create Vehicle (with storage and preparation) Mutation
 export function useCreateVehicleStorageRecord() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: VehicleStorageFormData) => {
-      const response = await fetch("/api/vehicle-storage-records", {
+      const response = await fetch("/api/vehicles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error("Failed to create storage record");
+      if (!response.ok) throw new Error("Failed to create vehicle");
       return response.json();
     },
     onSuccess: () => {
       // Invalidate queries to refetch data
-      queryClient.invalidateQueries({ queryKey: ["vehicle-storage-records"] });
       queryClient.invalidateQueries({ queryKey: ["vehicles"] });
+      queryClient.invalidateQueries({ queryKey: ["vehicle-storage-records"] });
     },
   });
 }

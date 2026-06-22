@@ -1,39 +1,62 @@
-import { RequestForm } from "@/components/request-form";
-import Image from "next/image";
+"use client";
 
-export default function LoginPage() {
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { AddVehicleDrawer } from "@/components/vehicles/AddVehicleDrawer";
+import {
+  AddVehicleForm,
+  type VehicleStorageFormData,
+} from "@/components/vehicles/AddVehicleForm";
+import {
+  useClients,
+  useLocations,
+  useCreateVehicleStorageRecord,
+} from "@/hooks/useClients";
+
+export default function Page() {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  // Fetch data with TanStack Query
+  const { data: clients = [], isLoading: clientsLoading } = useClients();
+  const { data: locations = [], isLoading: locationsLoading } = useLocations();
+  const createStorageRecord = useCreateVehicleStorageRecord();
+
+  const handleAddVehicle = async (data: VehicleStorageFormData) => {
+    try {
+      await createStorageRecord.mutateAsync(data);
+      setIsDrawerOpen(false);
+    } catch (error) {
+      console.error("Error adding vehicle:", error);
+    }
+  };
+
   return (
-    <div className="grid min-h-svh lg:grid-cols-2">
-      <div className="flex flex-col gap-4 p-6 md:p-10">
-        <div className="flex justify-center gap-2 md:justify-start">
-          <a href="#" className="flex items-center gap-2 font-medium">
-            <Image
-              src="/mm.png"
-              alt="Logo"
-              width={140}
-              height={40}
-              quality={100}
-              priority
-              style={{ objectFit: "contain" }}
-            />
-          </a>
+    <div className="flex flex-col gap-6">
+      {/* Header */}
+      <div className="flex w-full items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Almacenamiento de Motos
+          </h1>
+          <p>Gestiona todos los motos en almacenamiento</p>
         </div>
-        <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-xs">
-            <RequestForm />
-          </div>
-        </div>
+        <Button
+          className="gap-2 shrink-0"
+          onClick={() => setIsDrawerOpen(true)}>
+          <span>+</span> Añadir Moto
+        </Button>
       </div>
-      <div className="relative hidden  lg:block w-full">
-        <Image
-          src="/hero-pupilaje.jpg"
-          alt="Pupilaje"
-          fill
-          quality={100}
-          priority
-          className="object-cover dark:brightness-[0.5] dark:grayscale -z-10 "
+     {/* Table */}
+
+      {/* Add Vehicle Drawer */}
+      <AddVehicleDrawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+        <AddVehicleForm
+          onSubmit={handleAddVehicle}
+          isLoading={createStorageRecord.isPending}
+          clients={clients}
+          locations={locations}
         />
-      </div>
+      </AddVehicleDrawer>
     </div>
   );
 }

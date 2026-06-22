@@ -5,16 +5,26 @@ import { DateField } from "../fields/DateField";
 import { SelectField } from "../fields/SelectField";
 import { FormSection } from "../FormSection";
 import { VehicleStorageFormData } from "@/schemas/vehicle-storage.schema";
+import { useQuery } from "@tanstack/react-query";
 
 interface StorageInfoSectionProps {
   control: Control<VehicleStorageFormData>;
-  locations: Array<{ id: string; name: string }>;
+  locations?: Array<{ id: number; name: string }>;
 }
 
 export function StorageInfoSection({
   control,
   locations,
 }: StorageInfoSectionProps) {
+  // Fetch storage locations
+  const { data: storageLocations = [] } = useQuery({
+    queryKey: ["storage-locations"],
+    queryFn: async () => {
+      const res = await fetch("/api/storage-locations");
+      return res.json();
+    },
+  });
+
   return (
     <FormSection icon="📦" title="Información de Almacenamiento">
       <div className="grid grid-cols-2 gap-4">
@@ -33,28 +43,21 @@ export function StorageInfoSection({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label>Días Totales</Label>
-          <div className="flex items-center justify-center h-9 border border-gray-200 rounded-md bg-gray-50">
-            <span className="text-sm font-medium">0</span>
-          </div>
-        </div>
-
+      <div className="grid grid-cols-1 gap-4">
         <SelectField
           control={control}
           name="location_id"
           label="Ubicación"
           placeholder="Seleccionar ubicación"
-          options={locations.map((l) => ({ value: l.id, label: l.name }))}
+          options={storageLocations.map((l: any) => ({ value: String(l.id), label: l.name }))}
         />
       </div>
 
       <TextField
         control={control}
-        name="destination"
-        label="Destino / Lugar de Entrega"
-        placeholder="Ingrese destino o lugar de entrega"
+        name="delivery_place"
+        label="Lugar de Entrega"
+        placeholder="Ingrese lugar de entrega"
       />
     </FormSection>
   );

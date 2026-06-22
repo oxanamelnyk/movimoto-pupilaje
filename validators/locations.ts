@@ -9,7 +9,7 @@ export const locationUpdateSchema = z.object({
 });
 
 export const locationSchema = z.object({
-  id: z.string(),
+  id: z.number().int(),
   name: z.string(),
   created_at: z.date().nullable(),
 });
