@@ -1,12 +1,6 @@
-import { db } from "@/lib/db";
-import { tipos_estado_vehiculo } from "@/db/schema";
+import { query } from "@/db";
 
 export async function getEstadoVehiculo() {
-  return await db
-    .select({
-      id: tipos_estado_vehiculo.id_tipo_estado_vehiculo,
-      nombre: tipos_estado_vehiculo.nombre_estado_vehiculo,
-    })
-    .from(tipos_estado_vehiculo)
-    .orderBy(tipos_estado_vehiculo.id_tipo_estado_vehiculo);
+  const sql = "SELECT id_tipo_estado_vehiculo as id, nombre_estado_vehiculo as nombre FROM tipos_estado_vehiculo ORDER BY id_tipo_estado_vehiculo";
+  return query(sql);
 }

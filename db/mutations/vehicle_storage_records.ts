@@ -1,6 +1,4 @@
-import { db } from "@/db";
-import { vehicle_storage_records } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { query, execute } from "@/db";
 import {
   VehicleStorageRecordCreate,
   VehicleStorageRecordUpdate,
@@ -10,60 +8,93 @@ export async function createVehicleStorageRecord(
   data: VehicleStorageRecordCreate,
 ) {
   const id = crypto.randomUUID();
-  const record = {
+  const sql = `
+    INSERT INTO vehicle_storage_records 
+    (id, vehicle_id, status, entry_date, exit_date, location_id, destination, request_date, requested_by, unpacking_date, unpacking_type, notes, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+  `;
+  
+  await execute(sql, [
     id,
-    vehicle_id: data.vehicle_id,
-    status: data.status,
-    entry_date: new Date(data.entry_date),
-    exit_date: data.exit_date ? new Date(data.exit_date) : null,
-    location_id: data.location_id,
-    destination: data.destination || null,
-    request_date: data.request_date ? new Date(data.request_date) : null,
-    requested_by: data.requested_by || null,
-    unpacking_date: data.unpacking_date ? new Date(data.unpacking_date) : null,
-    unpacking_type: data.unpacking_type || null,
-    notes: data.notes || null,
-    created_at: new Date(),
-    updated_at: new Date(),
-  };
-  await db.insert(vehicle_storage_records).values(record);
-  return record;
+    data.vehicle_id,
+    data.status,
+    data.entry_date,
+    data.exit_date || null,
+    data.location_id,
+    data.destination || null,
+    data.request_date || null,
+    data.requested_by || null,
+    data.unpacking_date || null,
+    data.unpacking_type || null,
+    data.notes || null,
+  ]);
+
+  const record = await query("SELECT * FROM vehicle_storage_records WHERE id = ?", [id]);
+  return record[0] || null;
 }
 
 export async function updateVehicleStorageRecord(
   id: string,
   data: VehicleStorageRecordUpdate,
 ) {
-  const updateData: any = { ...data };
-  // Convert date strings to Date objects
-  if (updateData.entry_date) {
-    updateData.entry_date = new Date(updateData.entry_date);
-  }
-  if (updateData.exit_date) {
-    updateData.exit_date = new Date(updateData.exit_date);
-  }
-  if (updateData.request_date) {
-    updateData.request_date = new Date(updateData.request_date);
-  }
-  if (updateData.unpacking_date) {
-    updateData.unpacking_date = new Date(updateData.unpacking_date);
-  }
-  updateData.updated_at = new Date();
+  const fields = [];
+  const values: any[] = [];
 
-  await db
-    .update(vehicle_storage_records)
-    .set(updateData)
-    .where(eq(vehicle_storage_records.id, id));
-  // Fetch the updated record
-  const result = await db
-    .select()
-    .from(vehicle_storage_records)
-    .where(eq(vehicle_storage_records.id, id));
+  if (data.vehicle_id !== undefined) {
+    fields.push("vehicle_id = ?");
+    values.push(data.vehicle_id);
+  }
+  if (data.status !== undefined) {
+    fields.push("status = ?");
+    values.push(data.status);
+  }
+  if (data.entry_date !== undefined) {
+    fields.push("entry_date = ?");
+    values.push(data.entry_date);
+  }
+  if (data.exit_date !== undefined) {
+    fields.push("exit_date = ?");
+    values.push(data.exit_date);
+  }
+  if (data.location_id !== undefined) {
+    fields.push("location_id = ?");
+    values.push(data.location_id);
+  }
+  if (data.destination !== undefined) {
+    fields.push("destination = ?");
+    values.push(data.destination);
+  }
+  if (data.request_date !== undefined) {
+    fields.push("request_date = ?");
+    values.push(data.request_date);
+  }
+  if (data.requested_by !== undefined) {
+    fields.push("requested_by = ?");
+    values.push(data.requested_by);
+  }
+  if (data.unpacking_date !== undefined) {
+    fields.push("unpacking_date = ?");
+    values.push(data.unpacking_date);
+  }
+  if (data.unpacking_type !== undefined) {
+    fields.push("unpacking_type = ?");
+    values.push(data.unpacking_type);
+  }
+  if (data.notes !== undefined) {
+    fields.push("notes = ?");
+    values.push(data.notes);
+  }
+
+  fields.push("updated_at = NOW()");
+  values.push(id);
+
+  const sql = `UPDATE vehicle_storage_records SET ${fields.join(", ")} WHERE id = ?`;
+  await execute(sql, values);
+
+  const result = await query("SELECT * FROM vehicle_storage_records WHERE id = ?", [id]);
   return result[0] || null;
 }
 
 export async function deleteVehicleStorageRecord(id: string) {
-  await db
-    .delete(vehicle_storage_records)
-    .where(eq(vehicle_storage_records.id, id));
+  await execute("DELETE FROM vehicle_storage_records WHERE id = ?", [id]);
 }

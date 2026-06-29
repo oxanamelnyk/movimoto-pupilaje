@@ -7,6 +7,7 @@ import {
   AddVehicleForm,
   type VehicleStorageFormData,
 } from "@/components/vehicles/AddVehicleForm";
+import { VehiclesTable } from "@/components/vehicles/VehiclesTable";
 import {
   useClients,
   useLocations,
@@ -46,7 +47,9 @@ export default function Page() {
           <span>+</span> Añadir Moto
         </Button>
       </div>
-     {/* Table */}
+
+      {/* Table */}
+      <VehiclesTable />
 
       {/* Add Vehicle Drawer */}
       <AddVehicleDrawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>

@@ -98,117 +98,126 @@ export function ComboboxField<T extends FieldValues>({
     <FormField
       control={control}
       name={name}
-      render={({ field }: { field: ControllerRenderProps<T, FieldPath<T>> }) => (
-        <FormItem className="flex flex-col">
-          <FormLabel>{label}</FormLabel>
-          <div className="relative" ref={containerRef}>
-            <div className="relative">
-              <Input
-                placeholder={placeholder || "Buscar..."}
-                value={searchValue || (open ? "" : field.value || "")}
-                onChange={(e) => {
-                  setSearchValue(e.target.value);
-                  if (!open) setOpen(true);
-                }}
-                onFocus={() => setOpen(true)}
-                disabled={disabled || loading}
-                className="pr-8"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full"
-                onClick={() => {
-                  if (field.value) {
-                    field.onChange("");
-                    setSearchValue("");
-                  } else {
-                    setOpen(!open);
-                  }
-                }}
-                disabled={disabled || loading}
-              >
-                {field.value ? (
-                  <X className="h-4 w-4" />
-                ) : (
-                  <ChevronsUpDown className="h-4 w-4 opacity-50" />
-                )}
-              </Button>
-            </div>
+      render={({ field }: { field: ControllerRenderProps<T, FieldPath<T>> }) => {
+        // Find the label for the current selected value
+        const selectedLabel = options.find(
+          (option) => option.value === String(field.value)
+        )?.label || "";
 
-            {open && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-input rounded-md shadow-md z-50 max-h-60 overflow-y-auto">
-                {loading ? (
-                  <div className="px-3 py-2 text-sm text-muted-foreground">
-                    Cargando...
-                  </div>
-                ) : filteredOptions.length > 0 ? (
-                  <>
-                    {filteredOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => {
-                          field.onChange(option.value);
-                          setOpen(false);
-                          setSearchValue("");
-                        }}
-                        className={cn(
-                          "w-full text-left px-3 py-2 text-sm hover:bg-accent flex items-center gap-2",
-                          field.value === option.value && "bg-accent"
-                        )}
-                      >
-                        <Check
-                          className={cn(
-                            "h-4 w-4",
-                            field.value === option.value ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {option.label}
-                      </button>
-                    ))}
-                    {searchValue && !hasExactMatch && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          field.onChange(searchValue);
-                          onCreateNew?.(searchValue);
-                          setOpen(false);
-                          setSearchValue("");
-                        }}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 flex items-center gap-2 text-blue-600 border-t"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Crear nuevo: "{searchValue}"
-                      </button>
-                    )}
-                  </>
-                ) : searchValue && !hasExactMatch ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      field.onChange(searchValue);
-                      onCreateNew?.(searchValue);
-                      setOpen(false);
+        return (
+          <FormItem className="flex flex-col">
+            <FormLabel>{label}</FormLabel>
+            <div className="relative" ref={containerRef}>
+              <div className="relative">
+                <Input
+                  placeholder={placeholder || "Buscar..."}
+                  value={searchValue || (open ? "" : selectedLabel || "")}
+                  onChange={(e) => {
+                    setSearchValue(e.target.value);
+                    if (!open) setOpen(true);
+                  }}
+                  onFocus={() => setOpen(true)}
+                  disabled={disabled || loading}
+                  className="pr-8"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full"
+                  onClick={() => {
+                    if (field.value) {
+                      field.onChange("");
                       setSearchValue("");
-                    }}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 flex items-center gap-2 text-blue-600"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Crear nuevo: "{searchValue}"
-                  </button>
-                ) : (
-                  <div className="px-3 py-2 text-sm text-muted-foreground">
-                    No hay opciones disponibles
-                  </div>
-                )}
+                    } else {
+                      setOpen(!open);
+                    }
+                  }}
+                  disabled={disabled || loading}
+                >
+                  {field.value ? (
+                    <X className="h-4 w-4" />
+                  ) : (
+                    <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                  )}
+                </Button>
               </div>
-            )}
-          </div>
-          <FormMessage />
-        </FormItem>
-      )}
+
+              {open && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-input rounded-md shadow-md z-50 max-h-60 overflow-y-auto">
+                  {loading ? (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                      Cargando...
+                    </div>
+                  ) : filteredOptions.length > 0 ? (
+                    <>
+                      {filteredOptions.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => {
+                            // Convert to number if the value is numeric
+                            const numValue = !isNaN(Number(option.value)) && option.value !== "" ? Number(option.value) : option.value;
+                            field.onChange(numValue);
+                            setOpen(false);
+                            setSearchValue("");
+                          }}
+                          className={cn(
+                            "w-full text-left px-3 py-2 text-sm hover:bg-accent flex items-center gap-2",
+                            (field.value === option.value || String(field.value) === option.value) && "bg-accent"
+                          )}
+                        >
+                          <Check
+                            className={cn(
+                              "h-4 w-4",
+                              field.value === option.value || String(field.value) === option.value ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {option.label}
+                        </button>
+                      ))}
+                      {searchValue && !hasExactMatch && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            field.onChange(searchValue);
+                            onCreateNew?.(searchValue);
+                            setOpen(false);
+                            setSearchValue("");
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 flex items-center gap-2 text-blue-600 border-t"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Crear nuevo: "{searchValue}"
+                        </button>
+                      )}
+                    </>
+                  ) : searchValue && !hasExactMatch ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        field.onChange(searchValue);
+                        onCreateNew?.(searchValue);
+                        setOpen(false);
+                        setSearchValue("");
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 flex items-center gap-2 text-blue-600"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Crear nuevo: "{searchValue}"
+                    </button>
+                  ) : (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                      No hay opciones disponibles
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <FormMessage />
+          </FormItem>
+        );
+      }}
     />
   );
 }

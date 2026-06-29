@@ -1,30 +1,23 @@
-import { db } from "@/db";
-import {
-  vehicle_preparation,
-  preparation_types,
-} from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { query } from "@/db";
 
-export async function getVehiclePreparation(vehicleId: string) {
-  return db
-    .select()
-    .from(vehicle_preparation)
-    .leftJoin(
-      preparation_types,
-      eq(vehicle_preparation.preparation_type_id, preparation_types.id),
-    )
-    .where(eq(vehicle_preparation.vehicle_id, vehicleId));
+export async function getVehiclePreparation(vehicleId: number) {
+  const sql = `
+    SELECT vp.*, pt.name as preparation_type_name
+    FROM vehicle_preparation vp
+    LEFT JOIN preparation_types pt ON vp.preparation_type_id = pt.id
+    WHERE vp.vehicle_id = ?
+  `;
+  return query(sql, [vehicleId]);
 }
 
-export async function getVehiclePreparationById(id: string) {
-  const result = await db
-    .select()
-    .from(vehicle_preparation)
-    .leftJoin(
-      preparation_types,
-      eq(vehicle_preparation.preparation_type_id, preparation_types.id),
-    )
-    .where(eq(vehicle_preparation.id, id))
-    .limit(1);
+export async function getVehiclePreparationById(id: number) {
+  const sql = `
+    SELECT vp.*, pt.name as preparation_type_name
+    FROM vehicle_preparation vp
+    LEFT JOIN preparation_types pt ON vp.preparation_type_id = pt.id
+    WHERE vp.id = ?
+    LIMIT 1
+  `;
+  const result = await query(sql, [id]);
   return result[0] || null;
 }

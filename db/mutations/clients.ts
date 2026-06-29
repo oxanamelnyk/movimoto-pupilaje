@@ -1,32 +1,44 @@
-import { db } from "@/db";
-import { clients } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { query, execute } from "@/db";
 import { ClientCreate, ClientUpdate } from "@/validators/clients";
 
 export async function createClient(data: ClientCreate) {
-  const result = await db.insert(clients).values(data).$returningId();
-  const clientId = result[0]?.id;
-  
+  const sql = "INSERT INTO clients (name, phone, email, created_at) VALUES (?, ?, ?, NOW())";
+  const [result] = await execute(sql, [data.name, data.phone, data.email]);
+  const clientId = (result as any).insertId;
+
   if (!clientId) return null;
-  
-  const client = await db
-    .select()
-    .from(clients)
-    .where(eq(clients.id, clientId))
-    .limit(1);
+
+  const client = await query("SELECT * FROM clients WHERE id = ?", [clientId]);
   return client[0] || null;
 }
 
 export async function updateClient(id: number, data: ClientUpdate) {
-  await db.update(clients).set(data).where(eq(clients.id, id));
-  const result = await db
-    .select()
-    .from(clients)
-    .where(eq(clients.id, id))
-    .limit(1);
-  return result[0] || null;
+  const fields = [];
+  const values: any[] = [];
+
+  if (data.name) {
+    fields.push("name = ?");
+    values.push(data.name);
+  }
+  if (data.phone) {
+    fields.push("phone = ?");
+    values.push(data.phone);
+  }
+  if (data.email) {
+    fields.push("email = ?");
+    values.push(data.email);
+  }
+
+  if (fields.length === 0) return null;
+
+  values.push(id);
+  const sql = `UPDATE clients SET ${fields.join(", ")} WHERE id = ?`;
+  await execute(sql, values);
+
+  const client = await query("SELECT * FROM clients WHERE id = ?", [id]);
+  return client[0] || null;
 }
 
 export async function deleteClient(id: number) {
-  await db.delete(clients).where(eq(clients.id, id));
+  await execute("DELETE FROM clients WHERE id = ?", [id]);
 }

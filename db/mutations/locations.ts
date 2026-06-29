@@ -1,25 +1,27 @@
-import { db } from "@/db";
-import { locations } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { query, execute } from "@/db";
 import { LocationCreate, LocationUpdate } from "@/validators/locations";
 
 export async function createLocation(data: LocationCreate) {
-  // Let database auto-generate ID
-  const result = await db
-    .insert(locations)
-    .values(data)
-    .$returningId();
-  
-  return result[0] || null;
+  const sql = "INSERT INTO locations (name, created_at) VALUES (?, NOW())";
+  const [result] = await execute(sql, [data.name]);
+  const locationId = (result as any).insertId;
+
+  if (!locationId) return null;
+
+  const location = await query("SELECT * FROM locations WHERE id = ?", [locationId]);
+  return location[0] || null;
 }
 
 export async function updateLocation(id: number, data: LocationUpdate) {
-  await db.update(locations).set(data).where(eq(locations.id, id));
-  // Fetch the updated location
-  const result = await db.select().from(locations).where(eq(locations.id, id));
-  return result[0] || null;
+  if (data.name) {
+    const sql = "UPDATE locations SET name = ? WHERE id = ?";
+    await execute(sql, [data.name, id]);
+  }
+
+  const location = await query("SELECT * FROM locations WHERE id = ?", [id]);
+  return location[0] || null;
 }
 
 export async function deleteLocation(id: number) {
-  await db.delete(locations).where(eq(locations.id, id));
+  await execute("DELETE FROM locations WHERE id = ?", [id]);
 }

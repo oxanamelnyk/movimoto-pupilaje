@@ -1,80 +1,82 @@
-import { db } from "@/db";
-import {
-  vehicles,
-  clients,
-  brands,
-  models,
-  colors,
-  vehicle_statuses,
-  vehicle_storage,
-  vehicle_preparation,
-  storage_locations,
-  preparation_types,
-} from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { query } from "@/db";
 
 export async function getVehicles() {
-  return db
-    .select()
-    .from(vehicles)
-    .leftJoin(clients, eq(vehicles.client_id, clients.id))
-    .leftJoin(brands, eq(vehicles.brand_id, brands.id))
-    .leftJoin(models, eq(vehicles.model_id, models.id))
-    .leftJoin(colors, eq(vehicles.color_id, colors.id))
-    .leftJoin(vehicle_statuses, eq(vehicles.status_id, vehicle_statuses.id))
-    .orderBy(vehicles.created_at);
+  const sql = `
+    SELECT 
+      v.*,
+      c.id as client_id, c.name as client_name,
+      b.id as brand_id, b.name as brand_name,
+      m.id as model_id, m.name as model_name,
+      col.id as color_id, col.name as color_name,
+      vs.id as status_id, vs.name as status_name
+    FROM vehicles v
+    LEFT JOIN clients c ON v.client_id = c.id
+    LEFT JOIN brands b ON v.brand_id = b.id
+    LEFT JOIN models m ON v.model_id = m.id
+    LEFT JOIN colors col ON v.color_id = col.id
+    LEFT JOIN vehicle_statuses vs ON v.status_id = vs.id
+    ORDER BY v.created_at DESC
+  `;
+  return query(sql);
 }
 
 export async function getVehicleById(id: number) {
-  const result = await db
-    .select()
-    .from(vehicles)
-    .leftJoin(clients, eq(vehicles.client_id, clients.id))
-    .leftJoin(brands, eq(vehicles.brand_id, brands.id))
-    .leftJoin(models, eq(vehicles.model_id, models.id))
-    .leftJoin(colors, eq(vehicles.color_id, colors.id))
-    .leftJoin(vehicle_statuses, eq(vehicles.status_id, vehicle_statuses.id))
-    .leftJoin(
-      vehicle_storage,
-      eq(vehicles.id, vehicle_storage.vehicle_id),
-    )
-    .leftJoin(
-      storage_locations,
-      eq(vehicle_storage.location_id, storage_locations.id),
-    )
-    .leftJoin(
-      vehicle_preparation,
-      eq(vehicles.id, vehicle_preparation.vehicle_id),
-    )
-    .leftJoin(
-      preparation_types,
-      eq(vehicle_preparation.preparation_type_id, preparation_types.id),
-    )
-    .where(eq(vehicles.id, id))
-    .limit(1);
-  return result[0] || null;
+  const sql = `
+    SELECT 
+      v.*,
+      c.id as client_id, c.name as client_name,
+      b.id as brand_id, b.name as brand_name,
+      m.id as model_id, m.name as model_name,
+      col.id as color_id, col.name as color_name,
+      vs.id as status_id, vs.name as status_name,
+      vs2.id as vehicle_storage_id, vs2.entry_date, vs2.exit_date, vs2.location_id,
+      sl.name as location_name,
+      vp.id as vehicle_preparation_id, vp.request_date, vp.requested_by, vp.preparation_date, vp.preparation_type_id,
+      pt.name as preparation_type_name
+    FROM vehicles v
+    LEFT JOIN clients c ON v.client_id = c.id
+    LEFT JOIN brands b ON v.brand_id = b.id
+    LEFT JOIN models m ON v.model_id = m.id
+    LEFT JOIN colors col ON v.color_id = col.id
+    LEFT JOIN vehicle_statuses vs ON v.status_id = vs.id
+    LEFT JOIN vehicle_storage vs2 ON v.id = vs2.vehicle_id
+    LEFT JOIN storage_locations sl ON vs2.location_id = sl.id
+    LEFT JOIN vehicle_preparation vp ON v.id = vp.vehicle_id
+    LEFT JOIN preparation_types pt ON vp.preparation_type_id = pt.id
+    WHERE v.id = ?
+    LIMIT 1
+  `;
+  const results = await query(sql, [id]);
+  return results[0] || null;
 }
 
 export async function getVehiclesByClientId(clientId: number) {
-  return db
-    .select()
-    .from(vehicles)
-    .leftJoin(clients, eq(vehicles.client_id, clients.id))
-    .leftJoin(brands, eq(vehicles.brand_id, brands.id))
-    .leftJoin(models, eq(vehicles.model_id, models.id))
-    .where(eq(vehicles.client_id, clientId))
-    .orderBy(vehicles.created_at);
+  const sql = `
+    SELECT 
+      v.*,
+      c.id as client_id, c.name as client_name,
+      b.id as brand_id, b.name as brand_name,
+      m.id as model_id, m.name as model_name
+    FROM vehicles v
+    LEFT JOIN clients c ON v.client_id = c.id
+    LEFT JOIN brands b ON v.brand_id = b.id
+    LEFT JOIN models m ON v.model_id = m.id
+    WHERE v.client_id = ?
+    ORDER BY v.created_at DESC
+  `;
+  return query(sql, [clientId]);
 }
 
 export async function getVehicleByVinOrPlate(vin: string, plate: string) {
-  const result = await db
-    .select()
-    .from(vehicles)
-    .leftJoin(clients, eq(vehicles.client_id, clients.id))
-    .where(
-      // Check either VIN or plate number
-      db.or(eq(vehicles.vin, vin), eq(vehicles.plate_number, plate))
-    )
-    .limit(1);
-  return result[0] || null;
+  const sql = `
+    SELECT 
+      v.*,
+      c.id as client_id, c.name as client_name
+    FROM vehicles v
+    LEFT JOIN clients c ON v.client_id = c.id
+    WHERE v.vin = ? OR v.plate_number = ?
+    LIMIT 1
+  `;
+  const results = await query(sql, [vin, plate]);
+  return results[0] || null;
 }

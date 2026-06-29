@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
 export const vehicleCreateSchema = z.object({
   client_id: z.number().int().min(1, "Client ID is required"),
   brand_id: z.number().int().min(1, "Brand ID is required"),
@@ -10,14 +12,14 @@ export const vehicleCreateSchema = z.object({
   plate_number: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   // Storage info
-  entry_date: z.string().min(1, "Entry date is required"),
-  exit_date: z.string().optional().nullable(),
+  entry_date: z.string().regex(dateRegex, "Entry date must be in YYYY-MM-DD format"),
+  exit_date: z.string().regex(dateRegex, "Exit date must be in YYYY-MM-DD format").optional().nullable(),
   location_id: z.number().int().min(1, "Location ID is required"),
   delivery_place: z.string().optional().nullable(),
   // Preparation info
-  request_date: z.string().optional().nullable(),
+  request_date: z.string().regex(dateRegex, "Request date must be in YYYY-MM-DD format").optional().nullable(),
   requested_by: z.string().optional().nullable(),
-  preparation_date: z.string().optional().nullable(),
+  preparation_date: z.string().regex(dateRegex, "Preparation date must be in YYYY-MM-DD format").optional().nullable(),
   preparation_type_id: z.number().int().optional().nullable(),
 });
 

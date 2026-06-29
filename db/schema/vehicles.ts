@@ -3,12 +3,12 @@ import { mysqlTable, varchar, int, text, timestamp } from "drizzle-orm/mysql-cor
 export const vehicles = mysqlTable("vehicles", {
   id: int().primaryKey().autoincrement(),
   client_id: int(),
-  brand_id: int(),
-  model_id: int(),
+  brand_id: int().notNull(),
+  model_id: int().notNull(),
   color_id: int(),
-  status_id: int(),
-  vin: varchar({ length: 50 }),
-  plate_number: varchar({ length: 50 }),
-  notes: text(),
+  status_id: int().notNull(),
+  vin: varchar({ length: 255 }),
+  plate_number: varchar({ length: 255 }),
+  notes: varchar({ length: 1000 }),
   created_at: timestamp().defaultNow(),
 });

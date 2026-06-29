@@ -1,25 +1,13 @@
-import { db } from "@/db";
-import { vehicles } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { sql } from "drizzle-orm";
+import { query } from "@/db";
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
   try {
-    const brands = await db
-      .selectDistinct({ brand: vehicles.brand })
-      .from(vehicles)
-      .orderBy(vehicles.brand)
-      .execute();
+    const brands = await query(
+      "SELECT id as value, name as label FROM brands ORDER BY name"
+    );
 
-    const formatted = brands
-      .map((item) => ({
-        value: item.brand,
-        label: item.brand,
-      }))
-      .filter((item) => item.value); // Remove empty values
-
-    return NextResponse.json(formatted);
+    return NextResponse.json(brands);
   } catch (error) {
     console.error("Error fetching brands:", error);
     return NextResponse.json([], { status: 500 });

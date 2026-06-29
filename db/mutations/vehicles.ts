@@ -1,35 +1,84 @@
-import { db } from "@/db";
-import { vehicles, vehicle_storage, vehicle_preparation } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { execute, query } from "@/db";
 import { VehicleCreate, VehicleUpdate } from "@/validators/vehicles";
 
 export async function createVehicle(data: VehicleCreate) {
-  // Let the database generate the ID via autoincrement
-  const vehicleData = {
-    client_id: data.client_id,
-    brand_id: data.brand_id,
-    model_id: data.model_id,
-    color_id: data.color_id || null,
-    status_id: data.status_id,
-    vin: data.vin || null,
-    plate_number: data.plate_number || null,
-    notes: data.notes || null,
-    created_at: new Date(),
-  };
+  // Insert vehicle record
+  const vehicleResult = await execute(
+    `INSERT INTO vehicles (client_id, brand_id, model_id, color_id, status_id, vin, plate_number, notes, created_at) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+    [
+      data.client_id,
+      data.brand_id,
+      data.model_id,
+      data.color_id || null,
+      data.status_id,
+      data.vin || null,
+      data.plate_number || null,
+      data.notes || null,
+    ]
+  );
   
-  const result = await db.insert(vehicles).values(vehicleData);
-  const vehicleId = result.insertId; // Get the auto-generated ID
+  const vehicleId = (vehicleResult as any)[0].insertId;
   
-  return { ...vehicleData, id: vehicleId };
+  // Create storage record if provided
+  if (data.entry_date && data.location_id) {
+    await execute(
+      `INSERT INTO vehicle_storage (vehicle_id, entry_date, exit_date, location_id, delivery_place, created_at) 
+       VALUES (?, ?, ?, ?, ?, NOW())`,
+      [
+        vehicleId,
+        data.entry_date,
+        data.exit_date || null,
+        data.location_id,
+        data.delivery_place || null,
+      ]
+    );
+  }
+
+  // Create preparation record if provided
+  if (
+    data.request_date ||
+    data.requested_by ||
+    data.preparation_date ||
+    data.preparation_type_id
+  ) {
+    await execute(
+      `INSERT INTO vehicle_preparation (vehicle_id, request_date, requested_by, preparation_date, preparation_type_id, created_at) 
+       VALUES (?, ?, ?, ?, ?, NOW())`,
+      [
+        vehicleId,
+        data.request_date || null,
+        data.requested_by || null,
+        data.preparation_date || null,
+        data.preparation_type_id || null,
+      ]
+    );
+  }
+
+  return { id: vehicleId };
 }
 
 export async function updateVehicle(id: number, data: VehicleUpdate) {
-  await db.update(vehicles).set(data).where(eq(vehicles.id, id));
-  // Fetch the updated vehicle
-  const result = await db.select().from(vehicles).where(eq(vehicles.id, id));
-  return result[0] || null;
+  const fields = Object.keys(data)
+    .map((key) => `${key} = ?`)
+    .join(", ");
+  const values = Object.values(data);
+  
+  await execute(
+    `UPDATE vehicles SET ${fields}, updated_at = NOW() WHERE id = ?`,
+    [...values, id]
+  );
+
+  const result = await query(
+    `SELECT * FROM vehicles WHERE id = ?`,
+    [id]
+  );
+  return (result as any[])[0] || null;
 }
 
 export async function deleteVehicle(id: number) {
-  await db.delete(vehicles).where(eq(vehicles.id, id));
+  await execute(
+    `DELETE FROM vehicles WHERE id = ?`,
+    [id]
+  );
 }

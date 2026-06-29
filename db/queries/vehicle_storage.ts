@@ -1,31 +1,23 @@
-import { db } from "@/db";
-import {
-  vehicle_storage,
-  storage_locations,
-  vehicles,
-} from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { query } from "@/db";
 
-export async function getVehicleStorage(vehicleId: string) {
-  return db
-    .select()
-    .from(vehicle_storage)
-    .leftJoin(
-      storage_locations,
-      eq(vehicle_storage.location_id, storage_locations.id),
-    )
-    .where(eq(vehicle_storage.vehicle_id, vehicleId));
+export async function getVehicleStorage(vehicleId: number) {
+  const sql = `
+    SELECT vs.*, sl.name as location_name
+    FROM vehicle_storage vs
+    LEFT JOIN storage_locations sl ON vs.location_id = sl.id
+    WHERE vs.vehicle_id = ?
+  `;
+  return query(sql, [vehicleId]);
 }
 
-export async function getVehicleStorageById(id: string) {
-  const result = await db
-    .select()
-    .from(vehicle_storage)
-    .leftJoin(
-      storage_locations,
-      eq(vehicle_storage.location_id, storage_locations.id),
-    )
-    .where(eq(vehicle_storage.id, id))
-    .limit(1);
+export async function getVehicleStorageById(id: number) {
+  const sql = `
+    SELECT vs.*, sl.name as location_name
+    FROM vehicle_storage vs
+    LEFT JOIN storage_locations sl ON vs.location_id = sl.id
+    WHERE vs.id = ?
+    LIMIT 1
+  `;
+  const result = await query(sql, [id]);
   return result[0] || null;
 }

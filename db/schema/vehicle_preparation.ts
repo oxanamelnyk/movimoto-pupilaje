@@ -4,7 +4,7 @@ export const vehicle_preparation = mysqlTable("vehicle_preparation", {
   id: int().primaryKey().autoincrement(),
   vehicle_id: int().notNull(),
   request_date: date(),
-  requested_by: varchar({ length: 150 }),
+  requested_by: varchar({ length: 255 }),
   preparation_date: date(),
   preparation_type_id: int(),
   created_at: timestamp().defaultNow(),

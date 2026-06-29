@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { colors } from "@/db/schema";
+import { query } from "@/db";
 
 export async function GET() {
   try {
-    const result = await db
-      .select({ id: colors.id, name: colors.name })
-      .from(colors)
-      .orderBy(colors.name);
+    const result = await query(
+      "SELECT id, name FROM colors ORDER BY name"
+    );
     return NextResponse.json(result);
   } catch (error) {
     console.error("Error fetching colors:", error);

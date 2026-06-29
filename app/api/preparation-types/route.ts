@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { preparation_types } from "@/db/schema";
+import { query } from "@/db";
 
 export async function GET() {
   try {
-    const result = await db
-      .select({ id: preparation_types.id, name: preparation_types.name })
-      .from(preparation_types)
-      .orderBy(preparation_types.name);
+    const result = await query(
+      "SELECT id, name FROM preparation_types ORDER BY name"
+    );
     return NextResponse.json(result);
   } catch (error) {
     console.error("Error fetching preparation types:", error);
