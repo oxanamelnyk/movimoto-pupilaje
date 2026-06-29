@@ -2,7 +2,9 @@ import { Control, FieldPath, FieldValues, ControllerRenderProps } from "react-ho
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -39,7 +41,7 @@ export function SelectField<T extends FieldValues>({
         <FormItem>
           <FormLabel>{label}</FormLabel>
           <Select 
-            value={field.value !== null && field.value !== undefined ? String(field.value) : ""} 
+            value={field.value !== null && field.value !== undefined && field.value !== 0 ? String(field.value) : ""} 
             onValueChange={(value) => {
               // Try to convert to number if the value is numeric
               const numValue = !isNaN(Number(value)) && value !== "" ? Number(value) : value;
@@ -48,16 +50,19 @@ export function SelectField<T extends FieldValues>({
             disabled={disabled}
           >
             <FormControl>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder={placeholder} />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              {options.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                {placeholder && <SelectLabel>{placeholder}</SelectLabel>}
+                {options.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
           <FormMessage />

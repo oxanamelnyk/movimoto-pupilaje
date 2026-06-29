@@ -106,8 +106,15 @@ export function useCreateVehicleStorageRecord() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error("Failed to create vehicle");
-      return response.json();
+      
+      const responseData = await response.json();
+      
+      if (!response.ok) {
+        const errorMessage = responseData.error || "Failed to create vehicle";
+        const details = responseData.details ? JSON.stringify(responseData.details) : "";
+        throw new Error(`${errorMessage}${details ? ": " + details : ""}`);
+      }
+      return responseData;
     },
     onSuccess: () => {
       // Invalidate queries to refetch data

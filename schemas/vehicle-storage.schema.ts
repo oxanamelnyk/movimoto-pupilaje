@@ -2,18 +2,18 @@ import { z } from "zod";
 
 export const vehicleStorageFormSchema = z.object({
   // Vehicle info
-  client_id: z.number().int("Se requiere cliente"),
-  brand_id: z.number().int("Se requiere marca"),
-  model_id: z.number().int("Se requiere modelo"),
+  client_id: z.number().int().min(1, "Se requiere cliente"),
+  brand_id: z.number().int().min(1, "Se requiere marca"),
+  model_id: z.number().int().min(1, "Se requiere modelo"),
   color_id: z.number().int().optional().nullable(),
-  status_id: z.number().int("Se requiere estado"),
+  status_id: z.number().int().min(1, "Se requiere estado"),
   vin: z.string().optional().nullable(),
   plate_number: z.string().optional().nullable(),
   
   // Storage info
   entry_date: z.string().min(1, "Se requiere fecha de entrada"),
   exit_date: z.string().optional().nullable(),
-  location_id: z.number().int("Se requiere ubicación"),
+  location_id: z.number().int().min(1, "Se requiere ubicación"),
   delivery_place: z.string().optional().nullable(),
   
   // Preparation info

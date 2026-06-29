@@ -9,6 +9,7 @@ export async function GET() {
     const vehicleList = await getVehicles();
     return NextResponse.json(vehicleList);
   } catch (error) {
+    console.error("❌ Error fetching vehicles:", error);
     return NextResponse.json(
       { error: "Failed to fetch vehicles" },
       { status: 500 },
@@ -19,11 +20,14 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log("📝 Creating vehicle with data:", JSON.stringify(body, null, 2));
+    
     const data = vehicleCreateSchema.parse(body);
+    console.log("✅ Validation passed");
 
     // Use transaction for atomicity
     const result = await db.transaction(async (tx) => {
-      // 1. Create vehicle record - let database auto-generate ID
+      // 1. Create vehicle record using Drizzle's insert
       const vehicleResult = await tx
         .insert(vehicles)
         .values({
@@ -35,7 +39,6 @@ export async function POST(request: NextRequest) {
           vin: data.vin || null,
           plate_number: data.plate_number || null,
           notes: data.notes || null,
-          created_at: new Date(),
         })
         .$returningId();
 
@@ -45,7 +48,9 @@ export async function POST(request: NextRequest) {
         throw new Error("Failed to generate vehicle ID");
       }
 
-      // 2. Create storage record
+      console.log("✅ Vehicle created with ID:", vehicleId);
+
+      // 2. Create storage record if entry_date and location_id provided
       if (data.entry_date && data.location_id) {
         await tx
           .insert(vehicle_storage)
@@ -55,8 +60,8 @@ export async function POST(request: NextRequest) {
             exit_date: data.exit_date || null,
             location_id: data.location_id,
             delivery_place: data.delivery_place || null,
-            created_at: new Date(),
           });
+        console.log("✅ Storage record created");
       }
 
       // 3. Create preparation record if data provided
@@ -74,24 +79,26 @@ export async function POST(request: NextRequest) {
             requested_by: data.requested_by || null,
             preparation_date: data.preparation_date || null,
             preparation_type_id: data.preparation_type_id || null,
-            created_at: new Date(),
           });
+        console.log("✅ Preparation record created");
       }
 
       return { id: vehicleId };
     });
 
+    console.log("✅ Transaction completed successfully");
     return NextResponse.json(result, { status: 201 });
   } catch (error: any) {
     if (error.name === "ZodError") {
+      console.error("❌ Validation error:", error.errors);
       return NextResponse.json(
         { error: "Validation error", details: error.errors },
         { status: 400 },
       );
     }
-    console.error("Error creating vehicle:", error);
+    console.error("❌ Error creating vehicle:", error.message || error);
     return NextResponse.json(
-      { error: "Failed to create vehicle" },
+      { error: error.message || "Failed to create vehicle" },
       { status: 500 },
     );
   }

@@ -10,9 +10,15 @@
     "db:generate": "dotenv -- drizzle-kit generate",
     "db:migrate": "dotenv -- drizzle-kit migrate",
     "db:studio": "dotenv -- drizzle-kit studio",
-    "playwright:install": "playwright install chromium"
+    "playwright:install": "playwright install chromium",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:all": "npm run test && npm run test:e2e"
   },
   "dependencies": {
+    "@base-ui/react": "^1.6.0",
     "@hookform/resolvers": "^5.2.2",
     "@tanstack/intent": "^0.0.36",
     "@tanstack/react-form": "^1.29.1",
@@ -41,7 +47,10 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -49,6 +58,8 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5"

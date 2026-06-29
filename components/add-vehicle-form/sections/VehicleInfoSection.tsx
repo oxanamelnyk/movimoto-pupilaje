@@ -3,6 +3,7 @@
 import { Control } from "react-hook-form";
 import { TextField } from "../fields/TextField";
 import { SelectField } from "../fields/SelectField";
+import { ComboboxField } from "../fields/ComboboxField";
 import { FormSection } from "../FormSection";
 import { VehicleStorageFormData } from "@/schemas/vehicle-storage.schema";
 import { useQuery } from "@tanstack/react-query";
@@ -55,11 +56,11 @@ export function VehicleInfoSection({
   return (
     <FormSection icon="🚗" title="Información del Vehículo">
       <div className="grid grid-cols-2 gap-4">
-        <SelectField
+        <ComboboxField
           control={control}
           name="client_id"
           label="Cliente"
-          placeholder="Seleccionar cliente"
+          placeholder="Buscar cliente..."
           options={clients.map((c) => ({ value: String(c.id), label: c.name || "" }))}
         />
 
@@ -73,29 +74,29 @@ export function VehicleInfoSection({
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <SelectField
+        <ComboboxField
           control={control}
           name="brand_id"
           label="Marca"
-          placeholder="Seleccionar marca"
+          placeholder="Buscar marca..."
           options={brands.map((b: any) => ({ value: String(b.id), label: b.name }))}
         />
 
-        <SelectField
+        <ComboboxField
           control={control}
           name="model_id"
           label="Modelo"
-          placeholder="Seleccionar modelo"
+          placeholder="Buscar modelo..."
           options={models.map((m: any) => ({ value: String(m.id), label: m.name }))}
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <SelectField
+        <ComboboxField
           control={control}
           name="color_id"
           label="Color"
-          placeholder="Seleccionar color"
+          placeholder="Buscar color..."
           options={colors.map((c: any) => ({ value: String(c.id), label: c.name }))}
         />
       </div>

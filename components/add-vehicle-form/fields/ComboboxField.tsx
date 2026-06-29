@@ -19,7 +19,8 @@ type ComboboxFieldProps<T extends FieldValues> = {
   name: FieldPath<T>;
   label: string;
   placeholder?: string;
-  fetchUrl: string;
+  fetchUrl?: string;
+  options?: Array<{ value: string; label: string }>;
   onCreateNew?: (value: string) => void;
   disabled?: boolean;
 };
@@ -30,17 +31,29 @@ export function ComboboxField<T extends FieldValues>({
   label,
   placeholder,
   fetchUrl,
+  options: initialOptions,
   onCreateNew,
   disabled,
 }: ComboboxFieldProps<T>) {
   const [open, setOpen] = useState(false);
-  const [options, setOptions] = useState<Array<{ value: string; label: string }>>([]);
+  const [options, setOptions] = useState<Array<{ value: string; label: string }>>(
+    initialOptions || []
+  );
   const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // If options are provided directly, use them
+    if (initialOptions) {
+      setOptions(initialOptions);
+      return;
+    }
+
+    // Otherwise, fetch from fetchUrl
     const fetchOptions = async () => {
+      if (!fetchUrl) return;
+
       setLoading(true);
       try {
         const response = await fetch(fetchUrl);
@@ -58,7 +71,7 @@ export function ComboboxField<T extends FieldValues>({
     if (open) {
       fetchOptions();
     }
-  }, [open, fetchUrl]);
+  }, [open, fetchUrl, initialOptions]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

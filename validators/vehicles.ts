@@ -1,18 +1,18 @@
 import { z } from "zod";
 
 export const vehicleCreateSchema = z.object({
-  client_id: z.number().int("Client ID must be a number"),
-  brand_id: z.number().int("Brand ID must be a number"),
-  model_id: z.number().int("Model ID must be a number"),
+  client_id: z.number().int().min(1, "Client ID is required"),
+  brand_id: z.number().int().min(1, "Brand ID is required"),
+  model_id: z.number().int().min(1, "Model ID is required"),
   color_id: z.number().int().optional().nullable(),
-  status_id: z.number().int("Status ID must be a number"),
+  status_id: z.number().int().min(1, "Status ID is required"),
   vin: z.string().optional().nullable(),
   plate_number: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   // Storage info
   entry_date: z.string().min(1, "Entry date is required"),
   exit_date: z.string().optional().nullable(),
-  location_id: z.number().int("Location ID must be a number"),
+  location_id: z.number().int().min(1, "Location ID is required"),
   delivery_place: z.string().optional().nullable(),
   // Preparation info
   request_date: z.string().optional().nullable(),
