@@ -21,6 +21,8 @@ interface AddVehicleFormProps {
   isLoading?: boolean;
   clients?: Array<{ id: number; name: string | null }>;
   locations?: Array<{ id: number; name: string }>;
+  initialData?: Partial<VehicleStorageFormData>;
+  isEditMode?: boolean;
 }
 
 export function AddVehicleForm({
@@ -28,15 +30,19 @@ export function AddVehicleForm({
   isLoading = false,
   clients = [],
   locations = [],
+  initialData,
+  isEditMode = false,
 }: AddVehicleFormProps) {
   const form = useForm<VehicleStorageFormData>({
     resolver: zodResolver(vehicleStorageFormSchema),
-    defaultValues,
+    defaultValues: initialData || defaultValues,
   });
 
   const handleSubmit = async (data: VehicleStorageFormData) => {
     await onSubmit(data);
-    form.reset();
+    if (!isEditMode) {
+      form.reset();
+    }
   };
 
   return (
@@ -52,7 +58,11 @@ export function AddVehicleForm({
           <NotesSection control={form.control} />
         </div>
 
-        <FormActions isLoading={isLoading} onReset={() => form.reset()} />
+        <FormActions
+          isLoading={isLoading}
+          onReset={() => form.reset()}
+          isEditMode={isEditMode}
+        />
       </form>
     </Form>
   );

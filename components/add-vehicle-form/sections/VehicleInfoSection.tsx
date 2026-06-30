@@ -54,14 +54,17 @@ export function VehicleInfoSection({
   });
 
   return (
-    <FormSection icon="🚗" title="Información del Vehículo">
+    <FormSection title="Información del Vehículo">
       <div className="grid grid-cols-2 gap-4">
         <ComboboxField
           control={control}
           name="client_id"
           label="Cliente"
           placeholder="Buscar cliente..."
-          options={clients.map((c) => ({ value: String(c.id), label: c.name || "" }))}
+          options={clients.map((c) => ({
+            value: String(c.id),
+            label: c.name || "",
+          }))}
         />
 
         <SelectField
@@ -69,7 +72,10 @@ export function VehicleInfoSection({
           name="status_id"
           label="Estado del Vehículo"
           placeholder="Seleccionar estado"
-          options={statuses.map((s: any) => ({ value: String(s.id), label: s.name }))}
+          options={statuses.map((s: any) => ({
+            value: String(s.id),
+            label: s.name,
+          }))}
         />
       </div>
 
@@ -79,7 +85,10 @@ export function VehicleInfoSection({
           name="brand_id"
           label="Marca"
           placeholder="Buscar marca..."
-          options={brands.map((b: any) => ({ value: String(b.id), label: b.name }))}
+          options={brands.map((b: any) => ({
+            value: String(b.id),
+            label: b.name,
+          }))}
         />
 
         <ComboboxField
@@ -87,33 +96,29 @@ export function VehicleInfoSection({
           name="model_id"
           label="Modelo"
           placeholder="Buscar modelo..."
-          options={models.map((m: any) => ({ value: String(m.id), label: m.name }))}
+          options={models.map((m: any) => ({
+            value: String(m.id),
+            label: m.name,
+          }))}
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
+        <TextField
+          control={control}
+          name="registration_identity"
+          label="Bastidor / Matrícula"
+          placeholder="Ingrese Bastidor / Matrícula"
+        />
         <ComboboxField
           control={control}
           name="color_id"
           label="Color"
           placeholder="Buscar color..."
-          options={colors.map((c: any) => ({ value: String(c.id), label: c.name }))}
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <TextField
-          control={control}
-          name="vin"
-          label="VIN (Bastidor)"
-          placeholder="Ingrese VIN"
-        />
-
-        <TextField
-          control={control}
-          name="plate_number"
-          label="Placa/Matrícula"
-          placeholder="Ingrese número de placa"
+          options={colors.map((c: any) => ({
+            value: String(c.id),
+            label: c.name,
+          }))}
         />
       </div>
     </FormSection>

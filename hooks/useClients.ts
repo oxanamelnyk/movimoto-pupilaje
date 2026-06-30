@@ -21,8 +21,7 @@ export interface Vehicle {
   model_id: number;
   color_id?: number | null;
   status_id: number;
-  vin?: string | null;
-  plate_number?: string | null;
+  registration_identity?: string | null;
   notes?: string | null;
   created_at?: Date | null;
 }
@@ -72,11 +71,14 @@ export function useLocations() {
 }
 
 // Vehicles Hook
-export function useVehicles() {
-  return useQuery<Vehicle[]>({
-    queryKey: ["vehicles"],
+export function useVehicles(page: number = 1, limit: number = 10) {
+  return useQuery({
+    queryKey: ["vehicles", page, limit],
     queryFn: async () => {
-      const response = await fetch("/api/vehicles");
+      const offset = (page - 1) * limit;
+      const response = await fetch(
+        `/api/vehicles?offset=${offset}&limit=${limit}`,
+      );
       if (!response.ok) throw new Error("Failed to fetch vehicles");
       return response.json();
     },
@@ -106,12 +108,90 @@ export function useCreateVehicleStorageRecord() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      
+
       const responseData = await response.json();
-      
+
       if (!response.ok) {
         const errorMessage = responseData.error || "Failed to create vehicle";
-        const details = responseData.details ? JSON.stringify(responseData.details) : "";
+        const details = responseData.details
+          ? JSON.stringify(responseData.details)
+          : "";
+        throw new Error(`${errorMessage}${details ? ": " + details : ""}`);
+      }
+      return responseData;
+    },
+    onSuccess: () => {
+      // Invalidate queries to refetch data
+      queryClient.invalidateQueries({ queryKey: ["vehicles"] });
+      queryClient.invalidateQueries({ queryKey: ["vehicle-storage-records"] });
+    },
+  });
+}
+
+export function useUpdateVehicleStorageRecord() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: VehicleStorageFormData;
+    }) => {
+      // Filter out fields that shouldn't be sent (0 values, empty strings for certain fields)
+      const cleanData: any = {};
+
+      if (data.client_id && data.client_id > 0)
+        cleanData.client_id = data.client_id;
+      if (data.brand_id && data.brand_id > 0)
+        cleanData.brand_id = data.brand_id;
+      if (data.model_id && data.model_id > 0)
+        cleanData.model_id = data.model_id;
+      if (data.color_id !== null && data.color_id !== undefined)
+        cleanData.color_id = data.color_id;
+      if (data.status_id && data.status_id > 0)
+        cleanData.status_id = data.status_id;
+      if (data.registration_identity)
+        cleanData.registration_identity = data.registration_identity;
+      if (data.notes !== null && data.notes !== undefined)
+        cleanData.notes = data.notes;
+      if (data.entry_date) cleanData.entry_date = data.entry_date;
+      if (data.exit_date !== null && data.exit_date !== undefined)
+        cleanData.exit_date = data.exit_date;
+      if (data.location_id && data.location_id > 0)
+        cleanData.location_id = data.location_id;
+      if (data.delivery_place !== null && data.delivery_place !== undefined)
+        cleanData.delivery_place = data.delivery_place;
+      if (data.request_date !== null && data.request_date !== undefined)
+        cleanData.request_date = data.request_date;
+      if (data.requested_by) cleanData.requested_by = data.requested_by;
+      if (data.preparation_date !== null && data.preparation_date !== undefined)
+        cleanData.preparation_date = data.preparation_date;
+      if (
+        data.preparation_type_id !== null &&
+        data.preparation_type_id !== undefined
+      )
+        cleanData.preparation_type_id = data.preparation_type_id;
+
+      console.log(
+        "📝 Sending update data:",
+        JSON.stringify(cleanData, null, 2),
+      );
+
+      const response = await fetch(`/api/vehicles/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cleanData),
+      });
+
+      const responseData = await response.json();
+
+      if (!response.ok) {
+        const errorMessage = responseData.error || "Failed to update vehicle";
+        const details = responseData.details
+          ? JSON.stringify(responseData.details)
+          : "";
         throw new Error(`${errorMessage}${details ? ": " + details : ""}`);
       }
       return responseData;

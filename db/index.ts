@@ -13,8 +13,10 @@ const pool = mysql.createPool({
   password: url.password,
   database: url.pathname.slice(1),
   waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
+  connectionLimit: 5,
+  queueLimit: 10,
+  enableKeepAlive: true,
+  keepAliveInitialDelayMs: 0,
 });
 
 export async function query(sql: string, values?: any[]) {

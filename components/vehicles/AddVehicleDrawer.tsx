@@ -14,21 +14,23 @@ interface AddVehicleDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   children: ReactNode;
+  title?: string;
+  description?: string;
 }
 
 export function AddVehicleDrawer({
   open,
   onOpenChange,
   children,
+  title = "Agregar Nuevo Vehículo",
+  description = "Agregar información del vehículo y almacenamiento",
 }: AddVehicleDrawerProps) {
   return (
     <Drawer direction="right" open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="overflow-y-auto overflow-x-hidden">
         <DrawerHeader>
-          <DrawerTitle>Agregar Nuevo Vehículo</DrawerTitle>
-          <DrawerDescription>
-            Agregar información del vehículo y almacenamiento
-          </DrawerDescription>
+          <DrawerTitle>{title}</DrawerTitle>
+          <DrawerDescription>{description}</DrawerDescription>
         </DrawerHeader>
 
         {children}
