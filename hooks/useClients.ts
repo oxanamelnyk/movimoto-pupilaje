@@ -70,6 +70,23 @@ export function useLocations() {
   });
 }
 
+// Vehicle Statuses Hook
+export interface VehicleStatus {
+  id: number;
+  name: string;
+}
+
+export function useVehicleStatuses() {
+  return useQuery<VehicleStatus[]>({
+    queryKey: ["vehicle-statuses"],
+    queryFn: async () => {
+      const response = await fetch("/api/vehicle-statuses");
+      if (!response.ok) throw new Error("Failed to fetch vehicle statuses");
+      return response.json();
+    },
+  });
+}
+
 // Vehicles Hook
 export function useVehicles(page: number = 1, limit: number = 10) {
   return useQuery({

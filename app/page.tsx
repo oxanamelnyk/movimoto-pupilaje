@@ -8,12 +8,17 @@ import {
   type VehicleStorageFormData,
 } from "@/components/vehicles/AddVehicleForm";
 import { VehiclesTable } from "@/components/vehicles/VehiclesTable";
+import { VehiclesTableFilters, type VehicleFilters } from "@/components/vehicles/VehiclesTableFilters";
+import { exportVehiclesToExcel } from "@/lib/export-utils";
 import {
   useClients,
   useLocations,
   useCreateVehicleStorageRecord,
   useUpdateVehicleStorageRecord,
+  useVehicles,
+  useVehicleStatuses,
 } from "@/hooks/useClients";
+import { Download } from "lucide-react";
 
 type VehicleWithRelations = {
   id: number;
@@ -44,13 +49,51 @@ export default function Page() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] =
     useState<VehicleWithRelations | null>(null);
+  const [selectedVehicleIds, setSelectedVehicleIds] = useState<number[]>([]);
+  const [filters, setFilters] = useState<VehicleFilters>({
+    clientId: undefined,
+    statusId: undefined,
+    entryDateFrom: undefined,
+    entryDateTo: undefined,
+    exitDateFrom: undefined,
+    exitDateTo: undefined,
+  });
   const isEditMode = selectedVehicle !== null;
+
+  // Fetch all vehicles for filtering
+  const { data: vehicleData = { vehicles: [], total: 0 } } = useVehicles(1, 1000);
+  const allVehicles = vehicleData.vehicles || [];
 
   // Fetch data with TanStack Query
   const { data: clients = [], isLoading: clientsLoading } = useClients();
+  const { data: statuses = [], isLoading: statusesLoading } = useVehicleStatuses();
   const { data: locations = [], isLoading: locationsLoading } = useLocations();
   const createStorageRecord = useCreateVehicleStorageRecord();
   const updateStorageRecord = useUpdateVehicleStorageRecord();
+
+  // Get selected vehicles for export from all vehicles (respecting filters)
+  const vehiclesToExport = allVehicles.filter((vehicle: VehicleWithRelations) => {
+    // Apply filters
+    if (filters.clientId && vehicle.client_id !== filters.clientId) return false;
+    if (filters.statusId && vehicle.status_id !== filters.statusId) return false;
+    
+    if (filters.entryDateFrom && vehicle.entry_date) {
+      if (new Date(vehicle.entry_date) < new Date(filters.entryDateFrom)) return false;
+    }
+    if (filters.entryDateTo && vehicle.entry_date) {
+      if (new Date(vehicle.entry_date) > new Date(filters.entryDateTo)) return false;
+    }
+    
+    if (filters.exitDateFrom && vehicle.exit_date) {
+      if (new Date(vehicle.exit_date) < new Date(filters.exitDateFrom)) return false;
+    }
+    if (filters.exitDateTo && vehicle.exit_date) {
+      if (new Date(vehicle.exit_date) > new Date(filters.exitDateTo)) return false;
+    }
+
+    // Only include if selected
+    return selectedVehicleIds.includes(vehicle.id);
+  });
 
   const handleAddClick = () => {
     setSelectedVehicle(null);
@@ -60,6 +103,12 @@ export default function Page() {
   const handleRowClick = (vehicle: VehicleWithRelations) => {
     setSelectedVehicle(vehicle);
     setIsDrawerOpen(true);
+  };
+
+  const handleExportExcel = () => {
+    if (vehiclesToExport.length === 0) return;
+    const timestamp = new Date().toLocaleDateString("es-ES");
+    exportVehiclesToExcel(vehiclesToExport, `almacenamiento-${timestamp}.csv`);
   };
 
   const handleSubmit = async (data: VehicleStorageFormData) => {
@@ -112,13 +161,37 @@ export default function Page() {
           </h1>
           <p>Gestiona todos los motos en almacenamiento</p>
         </div>
-        <Button className="gap-2 shrink-0" onClick={handleAddClick}>
-          <span>+</span> Añadir Moto
-        </Button>
+        <div className="flex gap-2">
+          {selectedVehicleIds.length > 0 && (
+            <Button
+              variant="outline"
+              className="gap-2 shrink-0"
+              onClick={handleExportExcel}>
+              <Download className="h-4 w-4" />
+              Exportar ({selectedVehicleIds.length})
+            </Button>
+          )}
+          <Button className="gap-2 shrink-0" onClick={handleAddClick}>
+            <span>+</span> Añadir Moto
+          </Button>
+        </div>
       </div>
 
+      {/* Filters */}
+      <VehiclesTableFilters 
+        clients={clients}
+        statuses={statuses}
+        filters={filters}
+        onFiltersChange={setFilters} 
+      />
+
       {/* Table */}
-      <VehiclesTable onRowClick={handleRowClick} />
+      <VehiclesTable 
+        onRowClick={handleRowClick}
+        selectedIds={selectedVehicleIds}
+        onSelectionChange={setSelectedVehicleIds}
+        filters={filters}
+      />
 
       {/* Add/Edit Vehicle Drawer */}
       <AddVehicleDrawer

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useVehicles } from "@/hooks/useClients";
+import { VehicleFilters } from "@/components/vehicles/VehiclesTableFilters";
 import {
   Table,
   TableBody,
@@ -42,9 +43,17 @@ type VehicleWithRelations = {
 
 interface VehiclesTableProps {
   onRowClick?: (vehicle: VehicleWithRelations) => void;
+  selectedIds?: number[];
+  onSelectionChange?: (ids: number[]) => void;
+  filters?: VehicleFilters;
 }
 
-export function VehiclesTable({ onRowClick }: VehiclesTableProps) {
+export function VehiclesTable({
+  onRowClick,
+  selectedIds = [],
+  onSelectionChange,
+  filters,
+}: VehiclesTableProps) {
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
   const { data: vehicleData = { vehicles: [], total: 0 }, isLoading } =
@@ -53,6 +62,65 @@ export function VehiclesTable({ onRowClick }: VehiclesTableProps) {
   const vehicles = vehicleData.vehicles || [];
   const total = vehicleData.total || 0;
   const totalPages = Math.ceil(total / itemsPerPage);
+
+  // Apply filters to vehicles
+  const filteredVehicles = useMemo(() => {
+    return vehicles.filter((vehicle: VehicleWithRelations) => {
+      if (!filters) return true;
+      
+      if (filters.clientId && vehicle.client_id !== filters.clientId) return false;
+      if (filters.statusId && vehicle.status_id !== filters.statusId) return false;
+      
+      if (filters.entryDateFrom && vehicle.entry_date) {
+        if (new Date(vehicle.entry_date) < new Date(filters.entryDateFrom)) return false;
+      }
+      if (filters.entryDateTo && vehicle.entry_date) {
+        if (new Date(vehicle.entry_date) > new Date(filters.entryDateTo)) return false;
+      }
+      
+      if (filters.exitDateFrom && vehicle.exit_date) {
+        if (new Date(vehicle.exit_date) < new Date(filters.exitDateFrom)) return false;
+      }
+      if (filters.exitDateTo && vehicle.exit_date) {
+        if (new Date(vehicle.exit_date) > new Date(filters.exitDateTo)) return false;
+      }
+      
+      return true;
+    });
+  }, [vehicles, filters]);
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = filteredVehicles.map((v: VehicleWithRelations) => v.id);
+      onSelectionChange?.([...new Set([...selectedIds, ...allIds])]);
+    } else {
+      const pageIds = new Set(filteredVehicles.map((v: VehicleWithRelations) => v.id));
+      onSelectionChange?.(
+        selectedIds.filter((id) => !pageIds.has(id))
+      );
+    }
+  };
+
+  const handleSelectRow = (
+    vehicleId: number,
+    checked: boolean,
+    event: React.MouseEvent
+  ) => {
+    event.stopPropagation();
+    let newIds: number[];
+    if (checked) {
+      newIds = [...selectedIds, vehicleId];
+    } else {
+      newIds = selectedIds.filter((id) => id !== vehicleId);
+    }
+    onSelectionChange?.(newIds);
+  };
+
+  const isAllSelected =
+    filteredVehicles.length > 0 &&
+    filteredVehicles.every((v: VehicleWithRelations) =>
+      selectedIds.includes(v.id)
+    );
 
   const getMonthName = (dateString?: string | null) => {
     if (!dateString) return "-";
@@ -74,6 +142,9 @@ export function VehiclesTable({ onRowClick }: VehiclesTableProps) {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <input type="checkbox" disabled checked={false} />
+                </TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Mes Entrada</TableHead>
@@ -94,7 +165,10 @@ export function VehiclesTable({ onRowClick }: VehiclesTableProps) {
             <TableBody>
               {[...Array(5)].map((_, i) => (
                 <TableRow key={i}>
-                  {[...Array(15)].map((_, j) => (
+                  <TableCell>
+                    <Skeleton className="h-4 w-4" />
+                  </TableCell>
+                  {[...Array(14)].map((_, j) => (
                     <TableCell key={j}>
                       <Skeleton className="h-4 w-20" />
                     </TableCell>
@@ -108,7 +182,7 @@ export function VehiclesTable({ onRowClick }: VehiclesTableProps) {
     );
   }
 
-  if (!vehicles || vehicles.length === 0) {
+  if (!filteredVehicles || filteredVehicles.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
         <p className="text-gray-500">
@@ -124,6 +198,14 @@ export function VehiclesTable({ onRowClick }: VehiclesTableProps) {
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50">
+              <TableHead className="w-12 font-semibold">
+                <input
+                  type="checkbox"
+                  checked={isAllSelected}
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  className="cursor-pointer"
+                />
+              </TableHead>
               <TableHead className="font-semibold">Cliente</TableHead>
               <TableHead className="font-semibold">Estado</TableHead>
               <TableHead className="font-semibold">Mes Entrada</TableHead>
@@ -144,14 +226,29 @@ export function VehiclesTable({ onRowClick }: VehiclesTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {vehicles.map((vehicle: VehicleWithRelations, index: number) => {
+            {filteredVehicles.map((vehicle: VehicleWithRelations, index: number) => {
+              const isSelected = selectedIds.includes(vehicle.id);
               return (
                 <TableRow
                   key={
                     vehicle?.id ? `vehicle-${vehicle.id}` : `vehicle-${index}`
                   }
-                  className="hover:bg-gray-50 cursor-pointer"
+                  className={`hover:bg-gray-50 cursor-pointer ${
+                    isSelected ? "bg-blue-50" : ""
+                  }`}
                   onClick={() => onRowClick?.(vehicle)}>
+                  <TableCell
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-12">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={(e) =>
+                        handleSelectRow(vehicle.id, e.target.checked, e as any)
+                      }
+                      className="cursor-pointer"
+                    />
+                  </TableCell>
                   <TableCell className="text-sm">
                     {vehicle?.client_name || "-"}
                   </TableCell>
