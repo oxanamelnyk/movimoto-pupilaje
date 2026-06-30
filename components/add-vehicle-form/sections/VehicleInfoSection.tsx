@@ -1,12 +1,13 @@
 "use client";
 
 import { Control } from "react-hook-form";
+import { useCallback } from "react";
 import { TextField } from "../fields/TextField";
 import { SelectField } from "../fields/SelectField";
 import { ComboboxField } from "../fields/ComboboxField";
 import { FormSection } from "../FormSection";
 import { VehicleStorageFormData } from "@/schemas/vehicle-storage.schema";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface VehicleInfoSectionProps {
   control: Control<VehicleStorageFormData>;
@@ -17,6 +18,115 @@ export function VehicleInfoSection({
   control,
   clients,
 }: VehicleInfoSectionProps) {
+  const queryClient = useQueryClient();
+
+  // Handler to create new client
+  const handleCreateClient = useCallback(
+    async (clientName: string) => {
+      try {
+        const response = await fetch("/api/clients", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: clientName }),
+        });
+
+        if (response.ok) {
+          const newClient = await response.json();
+          // Invalidate the clients query to refresh the list
+          await queryClient.invalidateQueries({ queryKey: ["clients"] });
+          return newClient;
+        } else {
+          const errorData = await response.json();
+          console.error("Failed to create client:", response.status, errorData);
+          return null;
+        }
+      } catch (error) {
+        console.error("Error creating client:", error);
+        return null;
+      }
+    },
+    [queryClient]
+  );
+
+  // Handler to create new brand
+  const handleCreateBrand = useCallback(
+    async (brandName: string) => {
+      try {
+        const response = await fetch("/api/brands", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: brandName }),
+        });
+
+        if (response.ok) {
+          const newBrand = await response.json();
+          await queryClient.invalidateQueries({ queryKey: ["brands"] });
+          return newBrand;
+        } else {
+          console.error("Failed to create brand");
+          return null;
+        }
+      } catch (error) {
+        console.error("Error creating brand:", error);
+        return null;
+      }
+    },
+    [queryClient]
+  );
+
+  // Handler to create new model
+  const handleCreateModel = useCallback(
+    async (modelName: string) => {
+      try {
+        const response = await fetch("/api/models", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: modelName }),
+        });
+
+        if (response.ok) {
+          const newModel = await response.json();
+          await queryClient.invalidateQueries({ queryKey: ["models"] });
+          return newModel;
+        } else {
+          console.error("Failed to create model");
+          return null;
+        }
+      } catch (error) {
+        console.error("Error creating model:", error);
+        return null;
+      }
+    },
+    [queryClient]
+  );
+
+  // Handler to create new color
+  const handleCreateColor = useCallback(
+    async (colorName: string) => {
+      try {
+        const response = await fetch("/api/colors", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: colorName }),
+        });
+
+        if (response.ok) {
+          const newColor = await response.json();
+          // Invalidate the colors query to refresh the list
+          await queryClient.invalidateQueries({ queryKey: ["colors"] });
+          return newColor;
+        } else {
+          console.error("Failed to create color");
+          return null;
+        }
+      } catch (error) {
+        console.error("Error creating color:", error);
+        return null;
+      }
+    },
+    [queryClient]
+  );
+
   // Fetch brands
   const { data: brands = [] } = useQuery({
     queryKey: ["brands"],
@@ -65,6 +175,7 @@ export function VehicleInfoSection({
             value: String(c.id),
             label: c.name || "",
           }))}
+          onCreateNew={handleCreateClient}
         />
 
         <SelectField
@@ -89,6 +200,7 @@ export function VehicleInfoSection({
             value: String(b.id),
             label: b.name,
           }))}
+          onCreateNew={handleCreateBrand}
         />
 
         <ComboboxField
@@ -100,6 +212,7 @@ export function VehicleInfoSection({
             value: String(m.id),
             label: m.name,
           }))}
+          onCreateNew={handleCreateModel}
         />
       </div>
 
@@ -119,6 +232,7 @@ export function VehicleInfoSection({
             value: String(c.id),
             label: c.name,
           }))}
+          onCreateNew={handleCreateColor}
         />
       </div>
     </FormSection>

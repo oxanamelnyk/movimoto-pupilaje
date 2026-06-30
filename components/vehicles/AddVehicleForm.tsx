@@ -7,7 +7,7 @@ import {
   vehicleStorageFormSchema,
   type VehicleStorageFormData,
 } from "@/schemas/vehicle-storage.schema";
-import { defaultValues } from "@/components/add-vehicle-form/default-values";
+import { getDefaultValues } from "@/components/add-vehicle-form/default-values";
 import { VehicleInfoSection } from "@/components/add-vehicle-form/sections/VehicleInfoSection";
 import { StorageInfoSection } from "@/components/add-vehicle-form/sections/StorageInfoSection";
 import { PreparationInfoSection } from "@/components/add-vehicle-form/sections/PreparationInfoSection";
@@ -35,10 +35,22 @@ export function AddVehicleForm({
 }: AddVehicleFormProps) {
   const form = useForm<VehicleStorageFormData>({
     resolver: zodResolver(vehicleStorageFormSchema),
-    defaultValues: initialData || defaultValues,
+    defaultValues: initialData || getDefaultValues(),
   });
 
   const handleSubmit = async (data: VehicleStorageFormData) => {
+    // Ensure color_id is a number, not a string
+    if (data.color_id && typeof data.color_id === "string") {
+      // Try to convert numeric string to number
+      const numValue = parseInt(data.color_id, 10);
+      if (!isNaN(numValue)) {
+        data.color_id = numValue;
+      } else {
+        // If it's not a valid number, clear it
+        data.color_id = null;
+      }
+    }
+    
     await onSubmit(data);
     if (!isEditMode) {
       form.reset();

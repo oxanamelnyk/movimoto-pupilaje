@@ -2,11 +2,12 @@ import { Control, useWatch } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { TextField } from "../fields/TextField";
 import { DateField } from "../fields/DateField";
-import { SelectField } from "../fields/SelectField";
+import { ComboboxField } from "../fields/ComboboxField";
 import { FormSection } from "../FormSection";
 import { VehicleStorageFormData } from "@/schemas/vehicle-storage.schema";
-import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useCallback } from "react";
+import { calculateDaysBetween } from "@/lib/date-utils";
 
 interface StorageInfoSectionProps {
   control: Control<VehicleStorageFormData>;
@@ -17,23 +18,41 @@ export function StorageInfoSection({
   control,
   locations,
 }: StorageInfoSectionProps) {
+  const queryClient = useQueryClient();
+
+  // Handler to create new storage location
+  const handleCreateLocation = useCallback(
+    async (locationName: string) => {
+      try {
+        const response = await fetch("/api/storage-locations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: locationName }),
+        });
+
+        if (response.ok) {
+          const newLocation = await response.json();
+          await queryClient.invalidateQueries({ queryKey: ["storage-locations"] });
+          return newLocation;
+        } else {
+          console.error("Failed to create storage location");
+          return null;
+        }
+      } catch (error) {
+        console.error("Error creating storage location:", error);
+        return null;
+      }
+    },
+    [queryClient]
+  );
+
   // Watch entry_date and exit_date for calculation
   const entry_date = useWatch({ control, name: "entry_date" });
   const exit_date = useWatch({ control, name: "exit_date" });
 
-  // Calculate total days
+  // Calculate total days using DAYS360
   const diasTotales = useMemo(() => {
-    if (!entry_date || !exit_date) return "";
-
-    const startDate = new Date(entry_date);
-    const endDate = new Date(exit_date);
-
-    // Calculate days using DAYS360-like logic
-    const days = Math.floor(
-      (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
-    );
-
-    return days < 1 ? "" : days;
+    return calculateDaysBetween(entry_date, exit_date);
   }, [entry_date, exit_date]);
 
   // Fetch storage locations
@@ -67,21 +86,22 @@ export function StorageInfoSection({
         <div>
           <Label>Días Totales</Label>
           <div className="mt-2 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 font-medium">
-            {diasTotales || "-"}
+            {entry_date ? (diasTotales !== "" ? diasTotales : "0") : "-"}
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        <SelectField
+        <ComboboxField
           control={control}
           name="location_id"
           label="Ubicación"
-          placeholder="Seleccionar ubicación"
+          placeholder="Buscar ubicación..."
           options={storageLocations.map((l: any) => ({
             value: String(l.id),
             label: l.name,
           }))}
+          onCreateNew={handleCreateLocation}
         />
       </div>
 

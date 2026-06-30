@@ -21,7 +21,7 @@ type ComboboxFieldProps<T extends FieldValues> = {
   placeholder?: string;
   fetchUrl?: string;
   options?: Array<{ value: string; label: string }>;
-  onCreateNew?: (value: string) => void;
+  onCreateNew?: (value: string) => Promise<{ id: number | string; name: string } | null> | void;
   disabled?: boolean;
 };
 
@@ -179,9 +179,21 @@ export function ComboboxField<T extends FieldValues>({
                       {searchValue && !hasExactMatch && (
                         <button
                           type="button"
-                          onClick={() => {
-                            field.onChange(searchValue);
-                            onCreateNew?.(searchValue);
+                          onClick={async () => {
+                            if (onCreateNew) {
+                              const result = await onCreateNew(searchValue);
+                              // If a new item was created with an ID, set it to the field
+                              if (result && result.id) {
+                                const numValue = Number(result.id);
+                                // Optimistically add to options so it shows up immediately
+                                const newOption = { 
+                                  value: String(result.id), 
+                                  label: result.name || searchValue 
+                                };
+                                setOptions(prev => [...prev, newOption]);
+                                field.onChange(numValue);
+                              }
+                            }
                             setOpen(false);
                             setSearchValue("");
                           }}
@@ -195,9 +207,21 @@ export function ComboboxField<T extends FieldValues>({
                   ) : searchValue && !hasExactMatch ? (
                     <button
                       type="button"
-                      onClick={() => {
-                        field.onChange(searchValue);
-                        onCreateNew?.(searchValue);
+                      onClick={async () => {
+                        if (onCreateNew) {
+                          const result = await onCreateNew(searchValue);
+                          // If a new item was created with an ID, set it to the field
+                          if (result && result.id) {
+                            const numValue = Number(result.id);
+                            // Optimistically add to options so it shows up immediately
+                            const newOption = { 
+                              value: String(result.id), 
+                              label: result.name || searchValue 
+                            };
+                            setOptions(prev => [...prev, newOption]);
+                            field.onChange(numValue);
+                          }
+                        }
                         setOpen(false);
                         setSearchValue("");
                       }}

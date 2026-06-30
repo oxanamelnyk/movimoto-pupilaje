@@ -1,10 +1,11 @@
 import { Control } from "react-hook-form";
 import { TextField } from "../fields/TextField";
 import { DateField } from "../fields/DateField";
-import { SelectField } from "../fields/SelectField";
+import { ComboboxField } from "../fields/ComboboxField";
 import { FormSection } from "../FormSection";
 import { VehicleStorageFormData } from "@/schemas/vehicle-storage.schema";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
 
 interface PreparationInfoSectionProps {
   control: Control<VehicleStorageFormData>;
@@ -13,6 +14,34 @@ interface PreparationInfoSectionProps {
 export function PreparationInfoSection({
   control,
 }: PreparationInfoSectionProps) {
+  const queryClient = useQueryClient();
+
+  // Handler to create new preparation type
+  const handleCreatePrepType = useCallback(
+    async (prepTypeName: string) => {
+      try {
+        const response = await fetch("/api/preparation-types", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: prepTypeName }),
+        });
+
+        if (response.ok) {
+          const newPrepType = await response.json();
+          await queryClient.invalidateQueries({ queryKey: ["preparation-types"] });
+          return newPrepType;
+        } else {
+          console.error("Failed to create preparation type");
+          return null;
+        }
+      } catch (error) {
+        console.error("Error creating preparation type:", error);
+        return null;
+      }
+    },
+    [queryClient]
+  );
+
   // Fetch preparation types
   const { data: prepTypes = [] } = useQuery({
     queryKey: ["preparation-types"],
@@ -48,12 +77,16 @@ export function PreparationInfoSection({
           placeholder="Seleccionar fecha de preparación"
         />
 
-        <SelectField
+        <ComboboxField
           control={control}
           name="preparation_type_id"
           label="Tipo de Preparación"
-          placeholder="Seleccionar tipo"
-          options={prepTypes.map((p: any) => ({ value: String(p.id), label: p.name }))}
+          placeholder="Buscar tipo de preparación..."
+          options={prepTypes.map((p: any) => ({ 
+            value: String(p.id), 
+            label: p.name 
+          }))}
+          onCreateNew={handleCreatePrepType}
         />
       </div>
     </FormSection>

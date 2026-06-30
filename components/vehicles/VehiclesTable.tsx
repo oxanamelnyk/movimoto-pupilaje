@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/utils";
+import { calculateDaysBetween } from "@/lib/date-utils";
 
 type VehicleWithRelations = {
   id: number;
@@ -63,13 +64,7 @@ export function VehiclesTable({ onRowClick }: VehiclesTableProps) {
     entryDate?: string | null,
     exitDate?: string | null,
   ) => {
-    if (!entryDate) return "-";
-    const entry = new Date(entryDate);
-    const exit = exitDate ? new Date(exitDate) : new Date();
-    const days = Math.floor(
-      (exit.getTime() - entry.getTime()) / (1000 * 60 * 60 * 24),
-    );
-    return days >= 0 ? days : "-";
+    return calculateDaysBetween(entryDate, exitDate);
   };
 
   if (isLoading) {
@@ -129,8 +124,7 @@ export function VehiclesTable({ onRowClick }: VehiclesTableProps) {
         <Table>
           <TableHeader>
             <TableRow className="bg-gray-50">
-              {" "}
-              <TableHead className="font-semibold">Cliente</TableHead>{" "}
+              <TableHead className="font-semibold">Cliente</TableHead>
               <TableHead className="font-semibold">Estado</TableHead>
               <TableHead className="font-semibold">Mes Entrada</TableHead>
               <TableHead className="font-semibold">Entrada</TableHead>

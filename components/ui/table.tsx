@@ -51,7 +51,11 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   );
 }
 
-function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
+function TableRow({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"tr">) {
   return (
     <tr
       data-slot="table-row"
@@ -60,11 +64,17 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
         className,
       )}
       {...props}
-    />
+    >
+      {children}
+    </tr>
   );
 }
 
-function TableHead({ className, ...props }: React.ComponentProps<"th">) {
+function TableHead({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"th">) {
   return (
     <th
       data-slot="table-head"
@@ -73,11 +83,17 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
         className,
       )}
       {...props}
-    />
+    >
+      {children}
+    </th>
   );
 }
 
-function TableCell({ className, ...props }: React.ComponentProps<"td">) {
+function TableCell({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"td">) {
   return (
     <td
       data-slot="table-cell"
@@ -86,12 +102,15 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
         className,
       )}
       {...props}
-    />
+    >
+      {children}
+    </td>
   );
 }
 
 function TableCaption({
   className,
+  children,
   ...props
 }: React.ComponentProps<"caption">) {
   return (
@@ -99,7 +118,9 @@ function TableCaption({
       data-slot="table-caption"
       className={cn("mt-4 text-sm text-muted-foreground", className)}
       {...props}
-    />
+    >
+      {children}
+    </caption>
   );
 }
 
