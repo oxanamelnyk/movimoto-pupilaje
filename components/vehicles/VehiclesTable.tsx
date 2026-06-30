@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/utils";
 import { calculateDaysBetween } from "@/lib/date-utils";
+import { exportVehiclesToExcel } from "@/lib/export-utils";
+import { FileDown } from "lucide-react";
 
 type VehicleWithRelations = {
   id: number;
@@ -121,6 +123,23 @@ export function VehiclesTable({
     filteredVehicles.every((v: VehicleWithRelations) =>
       selectedIds.includes(v.id)
     );
+
+  // Get selected vehicles data for export
+  const selectedVehicles = useMemo(() => {
+    return filteredVehicles.filter((v: VehicleWithRelations) =>
+      selectedIds.includes(v.id)
+    );
+  }, [filteredVehicles, selectedIds]);
+
+  // Handle export to Excel
+  const handleExport = () => {
+    if (selectedVehicles.length === 0) {
+      console.warn("No vehicles selected for export");
+      return;
+    }
+    const fileName = `motos_${new Date().toISOString().split("T")[0]}.xlsx`;
+    exportVehiclesToExcel(selectedVehicles, fileName);
+  };
 
   const getMonthName = (dateString?: string | null) => {
     if (!dateString) return "-";
@@ -309,36 +328,62 @@ export function VehiclesTable({
         </Table>
       </div>
 
-      <div className="flex items-center justify-between bg-gray-50 px-4 py-3 border-t">
+      <div className="flex items-center justify-between bg-gray-50 px-4 py-3 border-t gap-4">
         <div className="text-sm text-gray-600">
-          Mostrando{" "}
-          <span className="font-medium">{(page - 1) * itemsPerPage + 1}</span> a{" "}
-          <span className="font-medium">
-            {Math.min(page * itemsPerPage, total)}
-          </span>{" "}
-          de <span className="font-medium">{total}</span> motos
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}>
-            Anterior
-          </Button>
-          <div className="flex items-center gap-2 px-3">
-            <span className="text-sm text-gray-600">
-              Página <span className="font-medium">{page}</span> de{" "}
-              <span className="font-medium">{totalPages || 1}</span>
+          {selectedIds.length > 0 && (
+            <span className="font-medium text-blue-600">
+              {selectedIds.length} motos seleccionadas
             </span>
+          )}
+          {selectedIds.length === 0 && (
+            <>
+              Mostrando{" "}
+              <span className="font-medium">
+                {(page - 1) * itemsPerPage + 1}
+              </span>{" "}
+              a{" "}
+              <span className="font-medium">
+                {Math.min(page * itemsPerPage, total)}
+              </span>{" "}
+              de <span className="font-medium">{total}</span> motos
+            </>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          {selectedIds.length > 0 && (
+            <Button
+              size="sm"
+              onClick={handleExport}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+              title="Exportar a Excel">
+              <FileDown size={16} />
+              <span>Exportar Excel</span>
+            </Button>
+          )}
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}>
+              Anterior
+            </Button>
+            <div className="flex items-center gap-2 px-3">
+              <span className="text-sm text-gray-600">
+                Página <span className="font-medium">{page}</span> de{" "}
+                <span className="font-medium">{totalPages || 1}</span>
+              </span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => (p < totalPages ? p + 1 : p))}
+              disabled={page >= totalPages}>
+              Siguiente
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => (p < totalPages ? p + 1 : p))}
-            disabled={page >= totalPages}>
-            Siguiente
-          </Button>
         </div>
       </div>
     </div>

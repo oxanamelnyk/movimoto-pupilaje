@@ -8,7 +8,7 @@ interface FormSectionProps {
 
 export function FormSection({ title, children }: FormSectionProps) {
   return (
-    <Card className="border-0 p-4">
+    <Card className="border-0 p-4 overflow-visible">
       <div className="space-y-4">
         <div className="flex items-center gap-2 pb-4 border-b">
           <h3 className="font-semibold text-sm">{title}</h3>
