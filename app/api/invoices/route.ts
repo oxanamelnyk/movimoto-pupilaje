@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       tax_percentage = 21,
       tax_amount,
       total,
-      items,
+      items = [],
       notes,
     } = body;
 
@@ -37,30 +37,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Generate unique invoice ID
-    // const invoiceId = `INV-${Date.now()}`;
+    // Generate unique invoice ID
+    const invoiceId = `INV-${Date.now()}`;
 
-    // TODO: Insert invoice into database
-    // const result = await db.insert(schema.invoices).values({
-    //   id: invoiceId,
-    //   client_id,
-    //   invoice_number,
-    //   invoice_date,
-    //   period_type,
-    //   period_start,
-    //   period_end,
-    //   subtotal: String(subtotal),
-    //   tax_percentage: String(tax_percentage),
-    //   tax_amount: String(tax_amount),
-    //   total: String(total),
-    //   notes,
-    //   status: "draft",
-    // });
+    // Insert invoice into database
+    const result = await db.insert(schema.invoices).values({
+      id: invoiceId,
+      client_id: Number(client_id),
+      invoice_number,
+      invoice_date,
+      period_type,
+      period_start,
+      period_end,
+      subtotal: String(subtotal),
+      tax_percentage: String(tax_percentage),
+      tax_amount: String(tax_amount),
+      total: String(total),
+      notes: notes || null,
+      status: "draft",
+    });
+
+    // Insert invoice items
+    if (items.length > 0) {
+      const itemsToInsert = items.map((item: any, index: number) => ({
+        id: `${invoiceId}-${index}`,
+        invoice_id: invoiceId,
+        vehicle_id: Number(item.vehicle_id),
+        registration_identity: item.registration_identity || null,
+        description: item.description,
+        quantity: String(item.quantity),
+        unit_price: String(item.unit_price),
+        amount: String(item.amount),
+      }));
+
+      await db.insert(schema.invoice_items).values(itemsToInsert);
+    }
 
     return NextResponse.json(
       {
         message: "Invoice created successfully",
-        // invoiceId,
+        invoiceId,
       },
       { status: 201 },
     );
@@ -77,12 +93,12 @@ export async function GET() {
   try {
     const db = drizzle(process.env.DATABASE_URL!, { schema });
 
-    // TODO: Fetch invoices from database
-    // const invoices = await db.select().from(schema.invoices);
+    // Fetch invoices from database
+    const invoices = await db.select().from(schema.invoices);
 
     return NextResponse.json(
       {
-        invoices: [],
+        invoices,
         message: "Invoices fetched successfully",
       },
       { status: 200 },

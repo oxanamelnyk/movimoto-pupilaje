@@ -83,10 +83,9 @@ export default function Page() {
   const allVehicles = vehicleData.vehicles || [];
 
   // Fetch data with TanStack Query
-  const { data: clients = [], isLoading: clientsLoading } = useClients();
-  const { data: statuses = [], isLoading: statusesLoading } =
-    useVehicleStatuses();
-  const { data: locations = [], isLoading: locationsLoading } = useLocations();
+  const { data: clients = [] } = useClients();
+  const { data: statuses = [] } = useVehicleStatuses();
+  const { data: locations = [] } = useLocations();
   const createStorageRecord = useCreateVehicleStorageRecord();
   const updateStorageRecord = useUpdateVehicleStorageRecord();
 
