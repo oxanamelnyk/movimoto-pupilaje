@@ -8,7 +8,11 @@ import {
   type VehicleStorageFormData,
 } from "@/components/vehicles/AddVehicleForm";
 import { VehiclesTable } from "@/components/vehicles/VehiclesTable";
-import { VehiclesTableFilters, type VehicleFilters } from "@/components/vehicles/VehiclesTableFilters";
+import {
+  VehiclesTableFilters,
+  type VehicleFilters,
+} from "@/components/vehicles/VehiclesTableFilters";
+import { InvoiceGenerator } from "@/components/invoices/InvoiceGenerator";
 import { exportVehiclesToExcel } from "@/lib/export-utils";
 import {
   useClients,
@@ -18,7 +22,7 @@ import {
   useVehicles,
   useVehicleStatuses,
 } from "@/hooks/useClients";
-import { Download } from "lucide-react";
+import { Download, FileText } from "lucide-react";
 
 type VehicleWithRelations = {
   id: number;
@@ -47,6 +51,7 @@ type VehicleWithRelations = {
 
 export default function Page() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] =
     useState<VehicleWithRelations | null>(null);
   const [selectedVehicleIds, setSelectedVehicleIds] = useState<number[]>([]);
@@ -58,42 +63,73 @@ export default function Page() {
     exitDateFrom: undefined,
     exitDateTo: undefined,
   });
+
+  // Default pricing rates
+  const pricingRates = {
+    dailyRate: 0.34,
+    handlingInOut: 3.0,
+    disassemblyWithoutWheels: 17.0,
+    disassemblyWithWheels: 24.0,
+    wasteDisposal: 2.5,
+  };
+
   const isEditMode = selectedVehicle !== null;
 
   // Fetch all vehicles for filtering
-  const { data: vehicleData = { vehicles: [], total: 0 } } = useVehicles(1, 1000);
+  const { data: vehicleData = { vehicles: [], total: 0 } } = useVehicles(
+    1,
+    1000,
+  );
   const allVehicles = vehicleData.vehicles || [];
 
   // Fetch data with TanStack Query
   const { data: clients = [], isLoading: clientsLoading } = useClients();
-  const { data: statuses = [], isLoading: statusesLoading } = useVehicleStatuses();
+  const { data: statuses = [], isLoading: statusesLoading } =
+    useVehicleStatuses();
   const { data: locations = [], isLoading: locationsLoading } = useLocations();
   const createStorageRecord = useCreateVehicleStorageRecord();
   const updateStorageRecord = useUpdateVehicleStorageRecord();
 
   // Get selected vehicles for export from all vehicles (respecting filters)
-  const vehiclesToExport = allVehicles.filter((vehicle: VehicleWithRelations) => {
-    // Apply filters
-    if (filters.clientId && vehicle.client_id !== filters.clientId) return false;
-    if (filters.statusId && vehicle.status_id !== filters.statusId) return false;
-    
-    if (filters.entryDateFrom && vehicle.entry_date) {
-      if (new Date(vehicle.entry_date) < new Date(filters.entryDateFrom)) return false;
-    }
-    if (filters.entryDateTo && vehicle.entry_date) {
-      if (new Date(vehicle.entry_date) > new Date(filters.entryDateTo)) return false;
-    }
-    
-    if (filters.exitDateFrom && vehicle.exit_date) {
-      if (new Date(vehicle.exit_date) < new Date(filters.exitDateFrom)) return false;
-    }
-    if (filters.exitDateTo && vehicle.exit_date) {
-      if (new Date(vehicle.exit_date) > new Date(filters.exitDateTo)) return false;
-    }
+  const vehiclesToExport = allVehicles.filter(
+    (vehicle: VehicleWithRelations) => {
+      // Apply filters
+      if (filters.clientId && vehicle.client_id !== filters.clientId)
+        return false;
+      if (filters.statusId && vehicle.status_id !== filters.statusId)
+        return false;
 
-    // Only include if selected
-    return selectedVehicleIds.includes(vehicle.id);
-  });
+      if (filters.entryDateFrom && vehicle.entry_date) {
+        if (new Date(vehicle.entry_date) < new Date(filters.entryDateFrom))
+          return false;
+      }
+      if (filters.entryDateTo && vehicle.entry_date) {
+        if (new Date(vehicle.entry_date) > new Date(filters.entryDateTo))
+          return false;
+      }
+
+      if (filters.exitDateFrom && vehicle.exit_date) {
+        if (new Date(vehicle.exit_date) < new Date(filters.exitDateFrom))
+          return false;
+      }
+      if (filters.exitDateTo && vehicle.exit_date) {
+        if (new Date(vehicle.exit_date) > new Date(filters.exitDateTo))
+          return false;
+      }
+
+      // Only include if selected
+      return selectedVehicleIds.includes(vehicle.id);
+    },
+  );
+
+  // Get selected vehicles for invoice
+  const selectedVehiclesForInvoice = allVehicles.filter(
+    (vehicle: VehicleWithRelations) => selectedVehicleIds.includes(vehicle.id),
+  );
+
+  // Get the client name from the first selected vehicle
+  const invoiceClientName =
+    selectedVehiclesForInvoice[0]?.client_name || "Cliente";
 
   const handleAddClick = () => {
     setSelectedVehicle(null);
@@ -163,13 +199,22 @@ export default function Page() {
         </div>
         <div className="flex gap-2">
           {selectedVehicleIds.length > 0 && (
-            <Button
-              variant="outline"
-              className="gap-2 shrink-0"
-              onClick={handleExportExcel}>
-              <Download className="h-4 w-4" />
-              Exportar ({selectedVehicleIds.length})
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                className="gap-2 shrink-0"
+                onClick={() => setIsInvoiceOpen(true)}>
+                <FileText className="h-4 w-4" />
+                Facturar ({selectedVehicleIds.length})
+              </Button>
+              <Button
+                variant="outline"
+                className="gap-2 shrink-0"
+                onClick={handleExportExcel}>
+                <Download className="h-4 w-4" />
+                Exportar ({selectedVehicleIds.length})
+              </Button>
+            </>
           )}
           <Button className="gap-2 shrink-0" onClick={handleAddClick}>
             <span>+</span> Añadir Moto
@@ -178,15 +223,15 @@ export default function Page() {
       </div>
 
       {/* Filters */}
-      <VehiclesTableFilters 
+      <VehiclesTableFilters
         clients={clients}
         statuses={statuses}
         filters={filters}
-        onFiltersChange={setFilters} 
+        onFiltersChange={setFilters}
       />
 
       {/* Table */}
-      <VehiclesTable 
+      <VehiclesTable
         onRowClick={handleRowClick}
         selectedIds={selectedVehicleIds}
         onSelectionChange={setSelectedVehicleIds}
@@ -216,6 +261,15 @@ export default function Page() {
           isEditMode={isEditMode}
         />
       </AddVehicleDrawer>
+
+      {/* Invoice Generator */}
+      <InvoiceGenerator
+        isOpen={isInvoiceOpen}
+        onClose={() => setIsInvoiceOpen(false)}
+        vehicles={selectedVehiclesForInvoice}
+        clientName={invoiceClientName}
+        pricingRates={pricingRates}
+      />
     </div>
   );
 }

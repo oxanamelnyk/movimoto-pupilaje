@@ -14,3 +14,4 @@ export * from "./storage_locations";
 export * from "./preparation_types";
 export * from "./vehicle_storage";
 export * from "./vehicle_preparation";
+export * from "./pricing";
