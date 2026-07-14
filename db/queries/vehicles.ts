@@ -11,7 +11,7 @@ export async function getVehicles(offset: number = 0, limit: number = 10) {
       vs.id as status_id, vs.name as status_name,
       vst.entry_date, vst.exit_date, vst.delivery_place, vst.location_id,
       sl.name as location_name,
-      vp.preparation_date, vp.request_date,
+      vp.preparation_date, vp.request_date, vp.requested_by, vp.preparation_type_id,
       pt.name as preparation_type_name
     FROM vehicles v
     LEFT JOIN clients c ON v.client_id = c.id

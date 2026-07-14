@@ -1,6 +1,6 @@
 "use client";
 
-import { Control } from "react-hook-form";
+import { Control, useWatch } from "react-hook-form";
 import { useCallback } from "react";
 import { TextField } from "../fields/TextField";
 import { SelectField } from "../fields/SelectField";
@@ -19,6 +19,7 @@ export function VehicleInfoSection({
   clients,
 }: VehicleInfoSectionProps) {
   const queryClient = useQueryClient();
+  const brand_id = useWatch({ control, name: "brand_id" });
 
   // Handler to create new client
   const handleCreateClient = useCallback(
@@ -45,7 +46,7 @@ export function VehicleInfoSection({
         return null;
       }
     },
-    [queryClient]
+    [queryClient],
   );
 
   // Handler to create new brand
@@ -63,7 +64,8 @@ export function VehicleInfoSection({
           await queryClient.invalidateQueries({ queryKey: ["brands"] });
           return newBrand;
         } else {
-          console.error("Failed to create brand");
+          const errorData = await response.json();
+          console.error("Failed to create brand:", response.status, errorData);
           return null;
         }
       } catch (error) {
@@ -71,17 +73,26 @@ export function VehicleInfoSection({
         return null;
       }
     },
-    [queryClient]
+    [queryClient],
   );
 
   // Handler to create new model
   const handleCreateModel = useCallback(
     async (modelName: string) => {
+      if (!brand_id) {
+        console.error("Please select a brand before creating a model");
+        alert("Por favor, selecciona una marca antes de crear un modelo");
+        return null;
+      }
+
       try {
         const response = await fetch("/api/models", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: modelName }),
+          body: JSON.stringify({
+            name: modelName,
+            brand_id: parseInt(brand_id, 10),
+          }),
         });
 
         if (response.ok) {
@@ -89,7 +100,8 @@ export function VehicleInfoSection({
           await queryClient.invalidateQueries({ queryKey: ["models"] });
           return newModel;
         } else {
-          console.error("Failed to create model");
+          const errorData = await response.json();
+          console.error("Failed to create model:", response.status, errorData);
           return null;
         }
       } catch (error) {
@@ -97,7 +109,7 @@ export function VehicleInfoSection({
         return null;
       }
     },
-    [queryClient]
+    [queryClient, brand_id],
   );
 
   // Handler to create new color
@@ -116,7 +128,8 @@ export function VehicleInfoSection({
           await queryClient.invalidateQueries({ queryKey: ["colors"] });
           return newColor;
         } else {
-          console.error("Failed to create color");
+          const errorData = await response.json();
+          console.error("Failed to create color:", response.status, errorData);
           return null;
         }
       } catch (error) {
@@ -124,7 +137,7 @@ export function VehicleInfoSection({
         return null;
       }
     },
-    [queryClient]
+    [queryClient],
   );
 
   // Fetch brands
