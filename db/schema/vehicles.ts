@@ -13,7 +13,9 @@ export const vehicles = mysqlTable("vehicles", {
   model_id: int().notNull(),
   color_id: int(),
   status_id: int().notNull(),
+  identifier: varchar({ length: 50 }),
+  notes: text(),
   registration_identity: varchar({ length: 255 }),
-  notes: varchar({ length: 1000 }),
   created_at: timestamp().defaultNow(),
+  updated_at: timestamp().defaultNow().onUpdateNow(),
 });

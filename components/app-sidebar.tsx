@@ -14,6 +14,7 @@ import {
   PieChart,
   Settings2,
   SquareTerminal,
+  Users,
 } from "lucide-react";
 
 import {
@@ -40,6 +41,11 @@ const data = {
       title: "Gestion",
       url: "/",
       isActive: true,
+    },
+    {
+      title: "Clientes",
+      url: "/dashboard/clients",
+      icon: Users,
     },
   ],
 };

@@ -36,6 +36,20 @@
       "when": 1779098504609,
       "tag": "0004_familiar_venom",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1784113295229,
+      "tag": "0005_shocking_diamondback",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1784113358502,
+      "tag": "0006_perfect_ben_parker",
+      "breakpoints": true
     }
   ]
 }

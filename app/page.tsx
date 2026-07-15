@@ -179,9 +179,11 @@ export default function Page() {
       location_id: selectedVehicle.location_id || 0,
       delivery_place: selectedVehicle.delivery_place || "",
       request_date: selectedVehicle.request_date || null,
+      requested_by: "",
       requested_by: selectedVehicle.requested_by || "",
       preparation_date: selectedVehicle.preparation_date || null,
       preparation_type_id: selectedVehicle.preparation_type_id || null,
+      preparation_type_id: null,
       notes: selectedVehicle.notes || "",
     };
   };
