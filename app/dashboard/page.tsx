@@ -12,7 +12,7 @@ export default function LoginPage() {
               alt="Logo"
               width={140}
               height={40}
-              quality={100}
+              quality={70}
               priority
               style={{ objectFit: "contain" }}
             />
