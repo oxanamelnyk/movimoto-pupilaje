@@ -1,27 +1,52 @@
 import { db } from "@/db/drizzle";
 import { tariffPlans, tariffServices } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { TariffPlanCreate, TariffPlanUpdate } from "@/validators/tariff_plans";
 
 export async function createTariffPlan(data: TariffPlanCreate) {
-  const result = await db.insert(tariffPlans).values({
-    client_id: data.client_id,
-    name: data.name,
-    valid_from: new Date(data.valid_from),
-    valid_to: data.valid_to ? new Date(data.valid_to) : null,
-    status: data.status || "Active",
-    description: data.description || null,
-  });
+  try {
+    const result = await db.insert(tariffPlans).values({
+      client_id: data.client_id,
+      name: data.name,
+      valid_from: new Date(data.valid_from),
+      valid_to: data.valid_to ? new Date(data.valid_to) : null,
+      status: data.status || "Active",
+      description: data.description || null,
+    });
 
-  if (!result) return null;
+    // Extract inserted ID from result
+    let insertedId: number | null = null;
 
-  const tariff = await db
-    .select()
-    .from(tariffPlans)
-    .where(eq(tariffPlans.id, result[0]))
-    .limit(1);
+    // Result is [ResultSetHeader, undefined] where ResultSetHeader has insertId
+    if (Array.isArray(result) && result[0]?.insertId) {
+      insertedId = result[0].insertId;
+    } else if ((result as any).insertId) {
+      insertedId = (result as any).insertId;
+    }
 
-  return tariff[0] ?? null;
+    if (insertedId) {
+      const tariff = await db
+        .select()
+        .from(tariffPlans)
+        .where(eq(tariffPlans.id, insertedId))
+        .limit(1);
+
+      if (tariff[0]) return tariff[0];
+    }
+
+    // Fallback: fetch the most recently created tariff for this client
+    const fallbackTariff = await db
+      .select()
+      .from(tariffPlans)
+      .where(eq(tariffPlans.client_id, data.client_id))
+      .orderBy(desc(tariffPlans.created_at))
+      .limit(1);
+
+    return fallbackTariff[0] ?? null;
+  } catch (error) {
+    console.error("Error creating tariff plan:", error);
+    throw error;
+  }
 }
 
 export async function updateTariffPlan(id: number, data: TariffPlanUpdate) {
@@ -77,7 +102,7 @@ export async function duplicateTariffPlan(id: number) {
     description: tariff.description,
   });
 
-  const newTariffId = insertResult[0];
+  const newTariffId = (insertResult as any).insertId;
   if (!newTariffId) return null;
 
   // Copy all services from original tariff

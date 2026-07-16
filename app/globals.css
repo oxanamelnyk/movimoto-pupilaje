@@ -123,7 +123,13 @@
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
+  }
+
+  /* Disable drag gesture on drawer but keep overlay close */
+  [data-slot="drawer-content"] {
+    touch-action: auto;
   }
 }

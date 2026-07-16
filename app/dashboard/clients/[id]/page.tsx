@@ -37,9 +37,10 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
+  DrawerDescription,
   DrawerClose,
-  DrawerFooter,
 } from "@/components/ui/drawer";
+import { FormSection } from "@/components/add-vehicle-form/FormSection";
 import {
   Pencil,
   Plus,
@@ -47,7 +48,6 @@ import {
   Copy,
   ChevronDown,
   ChevronRight,
-  X,
 } from "lucide-react";
 
 interface Client {
@@ -541,76 +541,87 @@ export default function ClientDetailsPage() {
       </Card>
 
       {/* Create Tariff Plan Drawer */}
-      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <DrawerContent className="w-full">
-          <DrawerHeader className="flex items-center justify-between">
+      <Drawer direction="right" open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <DrawerContent className="flex flex-col h-full">
+          <DrawerHeader>
             <DrawerTitle>Nuevo Plan Tarifario</DrawerTitle>
-            <DrawerClose className="p-0">
-              <X className="h-5 w-5" />
-            </DrawerClose>
+            <DrawerDescription>Crear un nuevo plan tarifario para este cliente</DrawerDescription>
           </DrawerHeader>
 
-          <div className="flex-1 overflow-y-auto px-4 pb-4">
-            <div className="space-y-4 max-w-md">
-              {/* Name */}
-              <div className="space-y-2">
-                <Label htmlFor="plan-name">Nombre del Plan *</Label>
-                <Input
-                  id="plan-name"
-                  placeholder="p.ej. Tarifa 2024"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                />
-              </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {/* Plan Info Section */}
+            <FormSection title="Información del Plan">
+              <div className="space-y-4">
+                {/* Name */}
+                <div className="space-y-2">
+                  <Label htmlFor="plan-name">Nombre del Plan *</Label>
+                  <Input
+                    id="plan-name"
+                    placeholder="p.ej. Tarifa 2024"
+                    value={formData.name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                  />
+                </div>
 
-              {/* Description */}
-              <div className="space-y-2">
-                <Label htmlFor="plan-description">Descripción</Label>
-                <Input
-                  id="plan-description"
-                  placeholder="p.ej. Plan principal para 2024"
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                />
-              </div>
+                {/* Description */}
+                <div className="space-y-2">
+                  <Label htmlFor="plan-description">Descripción</Label>
+                  <Input
+                    id="plan-description"
+                    placeholder="p.ej. Plan principal para 2024"
+                    value={formData.description}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
+                  />
+                </div>
 
-              {/* Status */}
-              <div className="space-y-2">
-                <Label htmlFor="plan-status">Estado</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value) =>
-                    setFormData({
-                      ...formData,
-                      status: value as "Active" | "Archived",
-                    })
-                  }>
-                  <SelectTrigger id="plan-status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Active">Activo</SelectItem>
-                    <SelectItem value="Archived">Archivado</SelectItem>
-                  </SelectContent>
-                </Select>
+                {/* Status */}
+                <div className="space-y-2">
+                  <Label htmlFor="plan-status">Estado</Label>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value) =>
+                      setFormData({
+                        ...formData,
+                        status: value as "Active" | "Archived",
+                      })
+                    }>
+                    <SelectTrigger id="plan-status">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Active">Activo</SelectItem>
+                      <SelectItem value="Archived">Archivado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
+            </FormSection>
           </div>
 
-          <DrawerFooter className="pt-4 border-t flex flex-row gap-2 justify-end">
+          {/* Footer Actions */}
+          <div className="sticky bottom-0 flex gap-3 p-6 bg-white border-t border-gray-200">
             <DrawerClose asChild>
-              <Button variant="outline">Cancelar</Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() =>
+                  setFormData({ name: "", description: "", status: "Active" })
+                }>
+                Cancelar
+              </Button>
             </DrawerClose>
             <Button
               onClick={handleCreateTariff}
-              disabled={submitting || !formData.name}>
+              disabled={submitting || !formData.name}
+              className="flex-1">
               {submitting ? "Guardando..." : "Crear Plan"}
             </Button>
-          </DrawerFooter>
+          </div>
         </DrawerContent>
       </Drawer>
     </div>

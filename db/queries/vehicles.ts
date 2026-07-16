@@ -1,31 +1,17 @@
 import { query } from "@/db";
 
-// List query - includes storage and preparation info
 export async function getVehicles(offset: number = 0, limit: number = 10) {
   const sql = `
     SELECT 
-      v.id,
-      v.identifier,
-      v.registration_identity,
-      v.brand_id,
-      b.name as brand_name,
-      v.model_id,
-      m.name as model_name,
-      v.color_id,
-      col.name as color_name,
-      v.status_id,
-      vs.name as status_name,
-      v.client_id,
-      c.name as client_name,
-      v.notes,
-      v.created_at,
-      vs2.entry_date,
-      vs2.exit_date,
-      vs2.delivery_place,
-      vs2.location_id,
+      v.*,
+      c.id as client_id, c.name as client_name,
+      b.id as brand_id, b.name as brand_name,
+      m.id as model_id, m.name as model_name,
+      col.id as color_id, col.name as color_name,
+      vs.id as status_id, vs.name as status_name,
+      vst.entry_date, vst.exit_date, vst.delivery_place, vst.location_id,
       sl.name as location_name,
-      vp.preparation_date,
-      vp.request_date,
+      vp.preparation_date, vp.request_date,
       pt.name as preparation_type_name
     FROM vehicles v
     LEFT JOIN clients c ON v.client_id = c.id
@@ -33,8 +19,8 @@ export async function getVehicles(offset: number = 0, limit: number = 10) {
     LEFT JOIN models m ON v.model_id = m.id
     LEFT JOIN colors col ON v.color_id = col.id
     LEFT JOIN vehicle_statuses vs ON v.status_id = vs.id
-    LEFT JOIN vehicle_storage vs2 ON v.id = vs2.vehicle_id
-    LEFT JOIN storage_locations sl ON vs2.location_id = sl.id
+    LEFT JOIN vehicle_storage vst ON v.id = vst.vehicle_id
+    LEFT JOIN storage_locations sl ON vst.location_id = sl.id
     LEFT JOIN vehicle_preparation vp ON v.id = vp.vehicle_id
     LEFT JOIN preparation_types pt ON vp.preparation_type_id = pt.id
     ORDER BY v.created_at DESC

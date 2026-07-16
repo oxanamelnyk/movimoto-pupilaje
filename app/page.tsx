@@ -251,6 +251,7 @@ export default function Page() {
         }>
         <AddVehicleForm
           onSubmit={handleSubmit}
+          onClose={() => setIsDrawerOpen(false)}
           isLoading={
             isEditMode
               ? updateStorageRecord.isPending

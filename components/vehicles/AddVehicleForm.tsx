@@ -18,6 +18,7 @@ export type { VehicleStorageFormData };
 
 interface AddVehicleFormProps {
   onSubmit: (data: VehicleStorageFormData) => Promise<void>;
+  onClose?: () => void;
   isLoading?: boolean;
   clients?: Array<{ id: number; name: string | null }>;
   locations?: Array<{ id: number; name: string }>;
@@ -27,6 +28,7 @@ interface AddVehicleFormProps {
 
 export function AddVehicleForm({
   onSubmit,
+  onClose,
   isLoading = false,
   clients = [],
   locations = [],
@@ -50,7 +52,7 @@ export function AddVehicleForm({
         data.color_id = null;
       }
     }
-    
+
     await onSubmit(data);
     if (!isEditMode) {
       form.reset();
@@ -72,7 +74,10 @@ export function AddVehicleForm({
 
         <FormActions
           isLoading={isLoading}
-          onReset={() => form.reset()}
+          onReset={() => {
+            form.reset();
+            onClose?.();
+          }}
           isEditMode={isEditMode}
         />
       </form>
