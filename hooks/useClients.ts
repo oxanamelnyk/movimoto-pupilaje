@@ -102,6 +102,20 @@ export function useVehicles(page: number = 1, limit: number = 10) {
   });
 }
 
+// Get single vehicle with full details
+export function useVehicleById(id: number | null | undefined) {
+  return useQuery({
+    queryKey: ["vehicle", id],
+    queryFn: async () => {
+      if (!id) throw new Error("Vehicle ID is required");
+      const response = await fetch(`/api/vehicles/${id}`);
+      if (!response.ok) throw new Error("Failed to fetch vehicle details");
+      return response.json();
+    },
+    enabled: !!id, // Only fetch if id is provided
+  });
+}
+
 // Vehicle Storage Records Hook
 export function useVehicleStorageRecords() {
   return useQuery<VehicleStorageRecord[]>({
@@ -137,9 +151,10 @@ export function useCreateVehicleStorageRecord() {
       }
       return responseData;
     },
-    onSuccess: () => {
-      // Invalidate queries to refetch data
+    onSuccess: (_, variables) => {
+      // Invalidate both list and detail queries
       queryClient.invalidateQueries({ queryKey: ["vehicles"] });
+      queryClient.invalidateQueries({ queryKey: ["vehicle", variables.id] });
       queryClient.invalidateQueries({ queryKey: ["vehicle-storage-records"] });
     },
   });

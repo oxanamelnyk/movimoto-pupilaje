@@ -1,26 +1,11 @@
-import "dotenv/config";
-import mysql from "mysql2/promise";
+// Re-export Drizzle instance
+export { db } from "./drizzle";
 
-const dbUrl = process.env.DATABASE_URL;
-if (!dbUrl && process.env.NODE_ENV !== "production") {
-  console.warn("DATABASE_URL not found, some features may not work");
-}
-
-const url = new URL(dbUrl || "mysql://localhost/placeholder");
-const pool = mysql.createPool({
-  host: url.hostname,
-  user: url.username,
-  password: url.password,
-  database: url.pathname.slice(1),
-  waitForConnections: true,
-  connectionLimit: 5,
-  queueLimit: 10,
-  enableKeepAlive: true,
-  keepAliveInitialDelayMs: 0,
-});
+// Use the same pool from drizzle.ts
+import { poolConnection } from "./drizzle";
 
 export async function query(sql: string, values?: any[]) {
-  const connection = await pool.getConnection();
+  const connection = await poolConnection.getConnection();
   try {
     const [results] = await connection.execute(sql, values);
     return results;
@@ -30,7 +15,7 @@ export async function query(sql: string, values?: any[]) {
 }
 
 export async function execute(sql: string, values?: any[]) {
-  const connection = await pool.getConnection();
+  const connection = await poolConnection.getConnection();
   try {
     const result = await connection.execute(sql, values);
     return result;

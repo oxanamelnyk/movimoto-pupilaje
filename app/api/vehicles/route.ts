@@ -7,7 +7,21 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const offset = parseInt(searchParams.get("offset") || "0", 10);
-    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    let limit = parseInt(searchParams.get("limit") || "10", 10);
+
+    // Enforce reasonable limits to prevent connection pool exhaustion
+    const MAX_LIMIT = 100;
+    const MIN_LIMIT = 1;
+
+    if (limit > MAX_LIMIT) {
+      console.warn(
+        `⚠️ Limit ${limit} exceeds MAX_LIMIT (${MAX_LIMIT}), capping to ${MAX_LIMIT}`,
+      );
+      limit = MAX_LIMIT;
+    }
+    if (limit < MIN_LIMIT) {
+      limit = MIN_LIMIT;
+    }
 
     const vehicleList = await getVehicles(offset, limit);
     const totalCount = await getVehicleCount();
@@ -17,6 +31,10 @@ export async function GET(request: NextRequest) {
       total: totalCount,
       offset,
       limit,
+      message:
+        limit !== parseInt(searchParams.get("limit") || "10", 10)
+          ? "Limit was capped to maximum allowed value"
+          : undefined,
     });
   } catch (error) {
     console.error("❌ Error fetching vehicles:", error);

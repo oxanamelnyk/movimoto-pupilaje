@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { tariffPlanCreateSchema } from "@/validators/tariff_plans";
-import { getTariffPlans } from "@/db/queries";
+import { getTariffPlans, getTariffPlansByClientId } from "@/db/queries";
 import { createTariffPlan } from "@/db/mutations";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const clientId = searchParams.get("clientId");
+
+    if (clientId) {
+      const tariffs = await getTariffPlansByClientId(Number(clientId));
+      return NextResponse.json(tariffs);
+    }
+
     const tariffs = await getTariffPlans();
     return NextResponse.json(tariffs);
   } catch (error: unknown) {
