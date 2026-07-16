@@ -101,10 +101,31 @@ export default function ClientDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [serviceDrawerOpen, setServiceDrawerOpen] = useState(false);
+  const [editingServiceId, setEditingServiceId] = useState<number | null>(null);
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    status: "Active" | "Archived";
+  }>({
     name: "",
     description: "",
-    status: "Active" as const,
+    status: "Active",
+  });
+  const [serviceFormData, setServiceFormData] = useState<{
+    name: string;
+    price: string;
+    unit: string;
+    type: "Fixed" | "Variable";
+    category: "Delivery" | "Storage";
+    discount: string;
+  }>({
+    name: "",
+    price: "",
+    unit: "",
+    type: "Fixed",
+    category: "Delivery",
+    discount: "",
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -204,6 +225,151 @@ export default function ClientDetailsPage() {
       });
     } catch (err) {
       alert(err instanceof Error ? err.message : "Error al crear el plan");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCreateService = async () => {
+    if (
+      !serviceFormData.name ||
+      !serviceFormData.price ||
+      !serviceFormData.unit
+    ) {
+      alert("Por favor completa los campos requeridos");
+      return;
+    }
+
+    if (!selectedTariff) {
+      alert("Por favor selecciona un plan tarifario");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/tariff-services", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tariff_id: selectedTariff.id,
+          name: serviceFormData.name,
+          price: serviceFormData.price,
+          unit: serviceFormData.unit,
+          type: serviceFormData.type,
+          category: serviceFormData.category,
+          discount: serviceFormData.discount || null,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to create service");
+
+      const newService = await response.json();
+      setTariffServices([...tariffServices, newService]);
+      setServiceDrawerOpen(false);
+      setServiceFormData({
+        name: "",
+        price: "",
+        unit: "",
+        type: "Fixed",
+        category: "Delivery",
+        discount: "",
+      });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Error al crear el servicio");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleOpenEditService = (service: TariffService) => {
+    setEditingServiceId(service.id);
+    setServiceFormData({
+      name: service.name,
+      price: service.price,
+      unit: service.unit,
+      type: service.type as "Fixed" | "Variable",
+      category: service.category as "Delivery" | "Storage",
+      discount: service.discount || "",
+    });
+    setServiceDrawerOpen(true);
+  };
+
+  const handleUpdateService = async () => {
+    if (
+      !serviceFormData.name ||
+      !serviceFormData.price ||
+      !serviceFormData.unit
+    ) {
+      alert("Por favor completa los campos requeridos");
+      return;
+    }
+
+    if (!editingServiceId) {
+      alert("Error: servicio no encontrado");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const response = await fetch(`/api/tariff-services/${editingServiceId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: serviceFormData.name,
+          price: serviceFormData.price,
+          unit: serviceFormData.unit,
+          type: serviceFormData.type,
+          category: serviceFormData.category,
+          discount: serviceFormData.discount || null,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update service");
+
+      const updatedService = await response.json();
+      setTariffServices(
+        tariffServices.map((s) =>
+          s.id === editingServiceId ? updatedService : s,
+        ),
+      );
+      setServiceDrawerOpen(false);
+      setEditingServiceId(null);
+      setServiceFormData({
+        name: "",
+        price: "",
+        unit: "",
+        type: "Fixed",
+        category: "Delivery",
+        discount: "",
+      });
+    } catch (err) {
+      alert(
+        err instanceof Error ? err.message : "Error al actualizar el servicio",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteService = async (serviceId: number) => {
+    if (!confirm("¿Está seguro de que desea eliminar este servicio?")) {
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const response = await fetch(`/api/tariff-services/${serviceId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) throw new Error("Failed to delete service");
+
+      setTariffServices(tariffServices.filter((s) => s.id !== serviceId));
+    } catch (err) {
+      alert(
+        err instanceof Error ? err.message : "Error al eliminar el servicio",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -495,12 +661,22 @@ export default function ClientDetailsPage() {
                                               <TableCell className="text-right space-x-2">
                                                 <Button
                                                   variant="ghost"
-                                                  size="sm">
+                                                  size="sm"
+                                                  onClick={() =>
+                                                    handleOpenEditService(
+                                                      service,
+                                                    )
+                                                  }>
                                                   <Pencil className="h-4 w-4 text-blue-600" />
                                                 </Button>
                                                 <Button
                                                   variant="ghost"
-                                                  size="sm">
+                                                  size="sm"
+                                                  onClick={() =>
+                                                    handleDeleteService(
+                                                      service.id,
+                                                    )
+                                                  }>
                                                   <Trash2 className="h-4 w-4 text-red-600" />
                                                 </Button>
                                               </TableCell>
@@ -517,7 +693,8 @@ export default function ClientDetailsPage() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="w-full text-yellow-600">
+                                    className="w-full text-yellow-600"
+                                    onClick={() => setServiceDrawerOpen(true)}>
                                     <Plus className="mr-2 h-4 w-4" />
                                     Añadir Servicio
                                   </Button>
@@ -545,12 +722,14 @@ export default function ClientDetailsPage() {
         <DrawerContent className="flex flex-col h-full">
           <DrawerHeader>
             <DrawerTitle>Nuevo Plan Tarifario</DrawerTitle>
-            <DrawerDescription>Crear un nuevo plan tarifario para este cliente</DrawerDescription>
+            <DrawerDescription>
+              Crear un nuevo plan tarifario para este cliente
+            </DrawerDescription>
           </DrawerHeader>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {/* Plan Info Section */}
-            <FormSection title="Información del Plan">
+            <FormSection icon="" title="Información del Plan">
               <div className="space-y-4">
                 {/* Name */}
                 <div className="space-y-2">
@@ -620,6 +799,186 @@ export default function ClientDetailsPage() {
               disabled={submitting || !formData.name}
               className="flex-1">
               {submitting ? "Guardando..." : "Crear Plan"}
+            </Button>
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Create/Edit Service Drawer */}
+      <Drawer
+        direction="right"
+        open={serviceDrawerOpen}
+        onOpenChange={setServiceDrawerOpen}>
+        <DrawerContent className="flex flex-col h-full">
+          <DrawerHeader>
+            <DrawerTitle>
+              {editingServiceId ? "Editar Servicio" : "Nuevo Servicio"}
+            </DrawerTitle>
+            <DrawerDescription>
+              {editingServiceId
+                ? "Actualizar datos del servicio"
+                : "Añadir un nuevo servicio a este plan tarifario"}
+            </DrawerDescription>
+          </DrawerHeader>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {/* Service Info Section */}
+            <FormSection icon="" title="Información del Servicio">
+              <div className="space-y-4">
+                {/* Name */}
+                <div className="space-y-2">
+                  <Label htmlFor="service-name">Nombre del Servicio *</Label>
+                  <Input
+                    id="service-name"
+                    placeholder="p.ej. Almacenamiento diario"
+                    value={serviceFormData.name}
+                    onChange={(e) =>
+                      setServiceFormData({
+                        ...serviceFormData,
+                        name: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                {/* Price */}
+                <div className="space-y-2">
+                  <Label htmlFor="service-price">Precio *</Label>
+                  <Input
+                    id="service-price"
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={serviceFormData.price}
+                    onChange={(e) =>
+                      setServiceFormData({
+                        ...serviceFormData,
+                        price: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                {/* Unit */}
+                <div className="space-y-2">
+                  <Label htmlFor="service-unit">Unidad *</Label>
+                  <Input
+                    id="service-unit"
+                    placeholder="p.ej. día, unidad, moto"
+                    value={serviceFormData.unit}
+                    onChange={(e) =>
+                      setServiceFormData({
+                        ...serviceFormData,
+                        unit: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                {/* Type */}
+                <div className="space-y-2">
+                  <Label htmlFor="service-type">Tipo</Label>
+                  <Select
+                    value={serviceFormData.type}
+                    onValueChange={(value) =>
+                      setServiceFormData({
+                        ...serviceFormData,
+                        type: value as "Fixed" | "Variable",
+                      })
+                    }>
+                    <SelectTrigger id="service-type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Fixed">Fijo</SelectItem>
+                      <SelectItem value="Variable">Variable</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Category */}
+                <div className="space-y-2">
+                  <Label htmlFor="service-category">Categoría</Label>
+                  <Select
+                    value={serviceFormData.category}
+                    onValueChange={(value) =>
+                      setServiceFormData({
+                        ...serviceFormData,
+                        category: value as "Delivery" | "Storage",
+                      })
+                    }>
+                    <SelectTrigger id="service-category">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Delivery">Entrega</SelectItem>
+                      <SelectItem value="Storage">Almacenamiento</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Discount */}
+                <div className="space-y-2">
+                  <Label htmlFor="service-discount">Descuento (%)</Label>
+                  <Input
+                    id="service-discount"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    placeholder="0"
+                    value={serviceFormData.discount}
+                    onChange={(e) =>
+                      setServiceFormData({
+                        ...serviceFormData,
+                        discount: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            </FormSection>
+          </div>
+
+          {/* Footer Actions */}
+          <div className="sticky bottom-0 flex gap-3 p-6 bg-white border-t border-gray-200">
+            <DrawerClose asChild>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setEditingServiceId(null);
+                  setServiceFormData({
+                    name: "",
+                    price: "",
+                    unit: "",
+                    type: "Fixed",
+                    category: "Delivery",
+                    discount: "",
+                  });
+                }}>
+                Cancelar
+              </Button>
+            </DrawerClose>
+            <Button
+              onClick={() =>
+                editingServiceId
+                  ? handleUpdateService()
+                  : handleCreateService()
+              }
+              disabled={
+                submitting ||
+                !serviceFormData.name ||
+                !serviceFormData.price ||
+                !serviceFormData.unit
+              }
+              className="flex-1">
+              {submitting
+                ? "Guardando..."
+                : editingServiceId
+                  ? "Actualizar Servicio"
+                  : "Crear Servicio"}
             </Button>
           </div>
         </DrawerContent>

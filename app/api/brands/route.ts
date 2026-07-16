@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       [name]
     );
 
-    if (existingBrand.length > 0) {
+    if (Array.isArray(existingBrand) && existingBrand.length > 0) {
       return NextResponse.json(existingBrand[0], { status: 200 });
     }
 
