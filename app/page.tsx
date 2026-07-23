@@ -87,7 +87,7 @@ export default function Page() {
 
   const { data: vehicleData = { vehicles: [], total: 0 } } = useVehicles(
     1,
-    1000
+    100
   );
 
   const allVehicles =

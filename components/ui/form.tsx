@@ -35,7 +35,8 @@ const FormField = React.forwardRef<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     render: (params: any) => React.ReactElement;
   }
->(({ name, control, render }) => (
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+>(({ name, control, render }, _ref) => (
   <FormFieldContext.Provider value={{ name }}>
     <Controller name={name} control={control} render={render} />
   </FormFieldContext.Provider>

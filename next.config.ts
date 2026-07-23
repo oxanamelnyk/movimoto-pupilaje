@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   typescript: {
     tsconfigPath: "./tsconfig.json",
   },
+  images: {
+    qualities: [70, 75],
+  },
 };
 
 export default nextConfig;
