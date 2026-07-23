@@ -16,32 +16,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/utils";
 import { calculateDaysBetween } from "@/lib/date-utils";
 import { exportVehiclesToExcel } from "@/lib/export-utils";
+import { type VehicleWithRelations } from "@/validators/vehicles";
 import { FileDown } from "lucide-react";
-
-type VehicleWithRelations = {
-  id: number;
-  client_id: number;
-  brand_id: number;
-  model_id: number;
-  color_id?: number | null;
-  status_id: number;
-  registration_identity?: string | null;
-  notes?: string | null;
-  created_at?: Date | string | null;
-  client_name?: string | null;
-  brand_name?: string | null;
-  model_name?: string | null;
-  color_name?: string | null;
-  status_name?: string | null;
-  entry_date?: string | null;
-  exit_date?: string | null;
-  delivery_place?: string | null;
-  location_id?: number | null;
-  location_name?: string | null;
-  preparation_date?: string | null;
-  request_date?: string | null;
-  preparation_type_name?: string | null;
-};
 
 interface VehiclesTableProps {
   onRowClick?: (vehicle: VehicleWithRelations) => void;

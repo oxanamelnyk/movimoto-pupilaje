@@ -16,6 +16,7 @@ import {
 } from "@/components/vehicles/VehiclesTableFilters";
 import { InvoiceGenerator } from "@/components/invoices/InvoiceGenerator";
 import { exportVehiclesToExcel } from "@/lib/export-utils";
+import { type VehicleWithRelations } from "@/validators/vehicles";
 import {
   useClients,
   useLocations,
@@ -24,38 +25,6 @@ import {
   useVehicles,
   useVehicleStatuses,
 } from "@/hooks/useClients";
-
-type VehicleWithRelations = {
-  id: number;
-  client_id: number;
-  brand_id: number;
-  model_id: number;
-  color_id?: number | null;
-  status_id: number;
-  registration_identity?: string | null;
-  notes?: string | null;
-  created_at?: Date | string | null;
-
-  client_name?: string | null;
-  brand_name?: string | null;
-  model_name?: string | null;
-  color_name?: string | null;
-  status_name?: string | null;
-
-  entry_date?: string | null;
-  exit_date?: string | null;
-  delivery_place?: string | null;
-
-  location_id?: number | null;
-  location_name?: string | null;
-
-  request_date?: string | null;
-  requested_by?: string | null;
-
-  preparation_date?: string | null;
-  preparation_type_id?: number | null;
-  preparation_type_name?: string | null;
-};
 
 export default function Page() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -87,7 +56,7 @@ export default function Page() {
 
   const { data: vehicleData = { vehicles: [], total: 0 } } = useVehicles(
     1,
-    100
+    100,
   );
 
   const allVehicles =
@@ -137,7 +106,7 @@ export default function Page() {
   });
 
   const selectedVehiclesForInvoice = allVehicles.filter((vehicle) =>
-    selectedVehicleIds.includes(vehicle.id)
+    selectedVehicleIds.includes(vehicle.id),
   );
 
   const invoiceClientName =
@@ -160,15 +129,10 @@ export default function Page() {
 
     const timestamp = new Date().toLocaleDateString("es-ES");
 
-    exportVehiclesToExcel(
-      vehiclesToExport,
-      `almacenamiento-${timestamp}.csv`
-    );
+    exportVehiclesToExcel(vehiclesToExport, `almacenamiento-${timestamp}.csv`);
   };
 
-  const handleSubmit = async (
-    data: VehicleStorageFormData
-  ): Promise<void> => {
+  const handleSubmit = async (data: VehicleStorageFormData): Promise<void> => {
     try {
       if (isEditMode && selectedVehicle) {
         await updateStorageRecord.mutateAsync({
@@ -186,9 +150,7 @@ export default function Page() {
     }
   };
 
-  const getInitialData = ():
-    | Partial<VehicleStorageFormData>
-    | undefined => {
+  const getInitialData = (): Partial<VehicleStorageFormData> | undefined => {
     if (!selectedVehicle) {
       return undefined;
     }
@@ -199,19 +161,16 @@ export default function Page() {
       model_id: selectedVehicle.model_id || 0,
       color_id: selectedVehicle.color_id ?? null,
       status_id: selectedVehicle.status_id || 0,
-      registration_identity:
-        selectedVehicle.registration_identity || "",
+      registration_identity: selectedVehicle.registration_identity || "",
       entry_date:
-        selectedVehicle.entry_date ||
-        new Date().toISOString().split("T")[0],
+        selectedVehicle.entry_date || new Date().toISOString().split("T")[0],
       exit_date: selectedVehicle.exit_date ?? null,
       location_id: selectedVehicle.location_id || 0,
       delivery_place: selectedVehicle.delivery_place || "",
       request_date: selectedVehicle.request_date ?? null,
       requested_by: selectedVehicle.requested_by || "",
       preparation_date: selectedVehicle.preparation_date ?? null,
-      preparation_type_id:
-        selectedVehicle.preparation_type_id ?? null,
+      preparation_type_id: selectedVehicle.preparation_type_id ?? null,
       notes: selectedVehicle.notes || "",
     };
   };
@@ -233,8 +192,7 @@ export default function Page() {
               <Button
                 variant="outline"
                 className="shrink-0 gap-2"
-                onClick={() => setIsInvoiceOpen(true)}
-              >
+                onClick={() => setIsInvoiceOpen(true)}>
                 <FileText className="h-4 w-4" />
                 Facturar ({selectedVehicleIds.length})
               </Button>
@@ -242,18 +200,14 @@ export default function Page() {
               <Button
                 variant="outline"
                 className="shrink-0 gap-2"
-                onClick={handleExportExcel}
-              >
+                onClick={handleExportExcel}>
                 <Download className="h-4 w-4" />
                 Exportar ({selectedVehicleIds.length})
               </Button>
             </>
           )}
 
-          <Button
-            className="shrink-0 gap-2"
-            onClick={handleAddClick}
-          >
+          <Button className="shrink-0 gap-2" onClick={handleAddClick}>
             <span>+</span>
             Añadir Moto
           </Button>
@@ -277,17 +231,12 @@ export default function Page() {
       <AddVehicleDrawer
         open={isDrawerOpen}
         onOpenChange={setIsDrawerOpen}
-        title={
-          isEditMode
-            ? "Editar Vehículo"
-            : "Agregar Nuevo Vehículo"
-        }
+        title={isEditMode ? "Editar Vehículo" : "Agregar Nuevo Vehículo"}
         description={
           isEditMode
             ? "Actualizar información del vehículo y almacenamiento"
             : "Agregar información del vehículo y almacenamiento"
-        }
-      >
+        }>
         <AddVehicleForm
           onSubmit={handleSubmit}
           onClose={() => setIsDrawerOpen(false)}
