@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,7 +42,7 @@ export function VehiclesTableFilters({
         clientId: value ? parseInt(value, 10) : null,
       });
     },
-    [filters, onFiltersChange]
+    [filters, onFiltersChange],
   );
 
   const handleStatusChange = useCallback(
@@ -52,7 +52,7 @@ export function VehiclesTableFilters({
         statusId: value ? parseInt(value, 10) : null,
       });
     },
-    [filters, onFiltersChange]
+    [filters, onFiltersChange],
   );
 
   const handleClearFilters = useCallback(() => {
@@ -83,8 +83,7 @@ export function VehiclesTableFilters({
             variant="outline"
             size="sm"
             onClick={handleClearFilters}
-            className="gap-2"
-          >
+            className="gap-2">
             <X className="w-4 h-4" />
             Limpiar filtros
           </Button>
@@ -99,8 +98,7 @@ export function VehiclesTableFilters({
           </Label>
           <Select
             value={filters.clientId ? String(filters.clientId) : ""}
-            onValueChange={handleClientChange}
-          >
+            onValueChange={handleClientChange}>
             <SelectTrigger id="filter-client" className="text-sm">
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
@@ -121,8 +119,7 @@ export function VehiclesTableFilters({
           </Label>
           <Select
             value={filters.statusId ? String(filters.statusId) : ""}
-            onValueChange={handleStatusChange}
-          >
+            onValueChange={handleStatusChange}>
             <SelectTrigger id="filter-status" className="text-sm">
               <SelectValue placeholder="Todos" />
             </SelectTrigger>

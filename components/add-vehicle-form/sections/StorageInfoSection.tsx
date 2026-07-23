@@ -11,13 +11,9 @@ import { calculateDaysBetween } from "@/lib/date-utils";
 
 interface StorageInfoSectionProps {
   control: Control<VehicleStorageFormData>;
-  locations?: Array<{ id: number; name: string }>;
 }
 
-export function StorageInfoSection({
-  control,
-  locations,
-}: StorageInfoSectionProps) {
+export function StorageInfoSection({ control }: StorageInfoSectionProps) {
   const queryClient = useQueryClient();
 
   // Handler to create new storage location
@@ -32,7 +28,9 @@ export function StorageInfoSection({
 
         if (response.ok) {
           const newLocation = await response.json();
-          await queryClient.invalidateQueries({ queryKey: ["storage-locations"] });
+          await queryClient.invalidateQueries({
+            queryKey: ["storage-locations"],
+          });
           return newLocation;
         } else {
           console.error("Failed to create storage location");
@@ -43,7 +41,7 @@ export function StorageInfoSection({
         return null;
       }
     },
-    [queryClient]
+    [queryClient],
   );
 
   // Watch entry_date and exit_date for calculation
@@ -97,7 +95,7 @@ export function StorageInfoSection({
           name="location_id"
           label="Ubicación"
           placeholder="Buscar ubicación..."
-          options={storageLocations.map((l: any) => ({
+          options={storageLocations.map((l: { id: number; name: string }) => ({
             value: String(l.id),
             label: l.name,
           }))}

@@ -20,8 +20,8 @@ export async function createTariffPlan(data: TariffPlanCreate) {
     // Result is [ResultSetHeader, undefined] where ResultSetHeader has insertId
     if (Array.isArray(result) && result[0]?.insertId) {
       insertedId = result[0].insertId;
-    } else if ((result as any).insertId) {
-      insertedId = (result as any).insertId;
+    } else if ((result as unknown as { insertId?: number })?.insertId) {
+      insertedId = (result as unknown as { insertId: number }).insertId;
     }
 
     if (insertedId) {
@@ -50,7 +50,7 @@ export async function createTariffPlan(data: TariffPlanCreate) {
 }
 
 export async function updateTariffPlan(id: number, data: TariffPlanUpdate) {
-  const updateData: any = {};
+  const updateData: Record<string, unknown> = {};
 
   if (data.name) updateData.name = data.name;
   if (data.valid_from) updateData.valid_from = new Date(data.valid_from);
@@ -102,7 +102,8 @@ export async function duplicateTariffPlan(id: number) {
     description: tariff.description,
   });
 
-  const newTariffId = (insertResult as any).insertId;
+  const newTariffId = (insertResult as unknown as { insertId: number })
+    .insertId;
   if (!newTariffId) return null;
 
   // Copy all services from original tariff

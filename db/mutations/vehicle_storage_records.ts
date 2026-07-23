@@ -1,3 +1,4 @@
+import type { ExecuteValues } from "mysql2";
 import { query, execute } from "@/db";
 import {
   VehicleStorageRecordCreate,
@@ -13,7 +14,7 @@ export async function createVehicleStorageRecord(
     (id, vehicle_id, status, entry_date, exit_date, location_id, destination, request_date, requested_by, unpacking_date, unpacking_type, notes, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
   `;
-  
+
   await execute(sql, [
     id,
     data.vehicle_id,
@@ -29,7 +30,10 @@ export async function createVehicleStorageRecord(
     data.notes || null,
   ]);
 
-  const record = await query("SELECT * FROM vehicle_storage_records WHERE id = ?", [id]);
+  const record = await query(
+    "SELECT * FROM vehicle_storage_records WHERE id = ?",
+    [id],
+  );
   return record[0] || null;
 }
 
@@ -38,7 +42,7 @@ export async function updateVehicleStorageRecord(
   data: VehicleStorageRecordUpdate,
 ) {
   const fields = [];
-  const values: any[] = [];
+  const values: unknown[] = [];
 
   if (data.vehicle_id !== undefined) {
     fields.push("vehicle_id = ?");
@@ -89,9 +93,12 @@ export async function updateVehicleStorageRecord(
   values.push(id);
 
   const sql = `UPDATE vehicle_storage_records SET ${fields.join(", ")} WHERE id = ?`;
-  await execute(sql, values);
+  await execute(sql, values as (ExecuteValues | null)[]);
 
-  const result = await query("SELECT * FROM vehicle_storage_records WHERE id = ?", [id]);
+  const result = await query(
+    "SELECT * FROM vehicle_storage_records WHERE id = ?",
+    [id],
+  );
   return result[0] || null;
 }
 

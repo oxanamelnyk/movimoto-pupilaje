@@ -172,7 +172,11 @@ export function calculateMonthlyCost(
   totalSubtotal: number;
 } {
   const periods = getMonthPeriods(entryDate, exitDate);
-  const monthlyBreakdowns = [];
+  const monthlyBreakdowns: Array<{
+    month: string;
+    items: InvoiceLineItem[];
+    subtotal: number;
+  }> = [];
   let totalSubtotal = 0;
 
   periods.forEach((period) => {

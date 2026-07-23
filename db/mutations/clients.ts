@@ -2,9 +2,14 @@ import { query, execute } from "@/db";
 import { ClientCreate, ClientUpdate } from "@/validators/clients";
 
 export async function createClient(data: ClientCreate) {
-  const sql = "INSERT INTO clients (name, phone, email, created_at) VALUES (?, ?, ?, NOW())";
-  const [result] = await execute(sql, [data.name, data.phone, data.email]);
-  const clientId = (result as any).insertId;
+  const sql =
+    "INSERT INTO clients (name, phone, email, created_at) VALUES (?, ?, ?, NOW())";
+  const [result] = await execute(sql, [
+    data.name,
+    data.phone ?? null,
+    data.email ?? null,
+  ]);
+  const clientId = (result as { insertId: number }).insertId;
 
   if (!clientId) return null;
 
@@ -14,7 +19,7 @@ export async function createClient(data: ClientCreate) {
 
 export async function updateClient(id: number, data: ClientUpdate) {
   const fields = [];
-  const values: any[] = [];
+  const values: (string | number | null)[] = [];
 
   if (data.name) {
     fields.push("name = ?");

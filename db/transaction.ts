@@ -1,9 +1,10 @@
 import { poolConnection } from "./drizzle";
+import type { ExecuteValues } from "mysql2";
 
 export async function withTransaction<T>(
   callback: (operations: {
-    execute: (sql: string, values?: any[]) => Promise<any>;
-    query: (sql: string, values?: any[]) => Promise<any>;
+    execute: (sql: string, values?: ExecuteValues) => Promise<unknown>;
+    query: (sql: string, values?: ExecuteValues) => Promise<unknown>;
   }) => Promise<T>,
 ): Promise<T> {
   const connection = await poolConnection.getConnection();
@@ -12,11 +13,11 @@ export async function withTransaction<T>(
     await connection.beginTransaction();
 
     const operations = {
-      execute: async (sql: string, values?: any[]) => {
+      execute: async (sql: string, values?: ExecuteValues) => {
         const [result] = await connection.execute(sql, values);
         return result;
       },
-      query: async (sql: string, values?: any[]) => {
+      query: async (sql: string, values?: ExecuteValues) => {
         const [result] = await connection.execute(sql, values);
         return result;
       },

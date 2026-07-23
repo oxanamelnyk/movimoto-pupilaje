@@ -6,12 +6,12 @@
  */
 export function days360(startDate: Date, endDate: Date): number {
   let d1 = startDate.getDate();
-  let m1 = startDate.getMonth() + 1; // getMonth returns 0-11
-  let y1 = startDate.getFullYear();
+  const m1 = startDate.getMonth() + 1; // getMonth returns 0-11
+  const y1 = startDate.getFullYear();
 
   let d2 = endDate.getDate();
-  let m2 = endDate.getMonth() + 1;
-  let y2 = endDate.getFullYear();
+  const m2 = endDate.getMonth() + 1;
+  const y2 = endDate.getFullYear();
 
   // Adjust day 31 to 30
   if (d1 === 31) {

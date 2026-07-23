@@ -49,11 +49,11 @@ async function addIndex() {
 
     const [results] = await connection.execute(sql);
     console.table(results);
-  } catch (error: any) {
-    if (error.message.includes("Duplicate key name")) {
+  } catch (error: unknown) {
+    if ((error as Error).message.includes("Duplicate key name")) {
       console.log("⚠️ Index already exists");
     } else {
-      console.error("❌ Error:", error.message);
+      console.error("❌ Error:", (error as Error).message);
     }
   } finally {
     connection.release();

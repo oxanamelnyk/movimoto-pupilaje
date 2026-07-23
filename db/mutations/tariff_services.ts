@@ -24,8 +24,8 @@ export async function createTariffService(data: TariffServiceCreate) {
     // Result is [ResultSetHeader, undefined] where ResultSetHeader has insertId
     if (Array.isArray(result) && result[0]?.insertId) {
       insertedId = result[0].insertId;
-    } else if ((result as any).insertId) {
-      insertedId = (result as any).insertId;
+    } else if ((result as unknown as { insertId?: number })?.insertId) {
+      insertedId = (result as unknown as { insertId: number }).insertId;
     }
 
     if (insertedId) {
@@ -57,7 +57,7 @@ export async function updateTariffService(
   id: number,
   data: TariffServiceUpdate,
 ) {
-  const updateData: any = {};
+  const updateData: Record<string, unknown> = {};
 
   if (data.name) updateData.name = data.name;
   if (data.price !== undefined) updateData.price = String(data.price);

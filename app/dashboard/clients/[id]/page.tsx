@@ -41,6 +41,7 @@ import {
   DrawerClose,
 } from "@/components/ui/drawer";
 import { FormSection } from "@/components/add-vehicle-form/FormSection";
+import type { TariffService } from "@/types/tariff-service";
 import {
   Pencil,
   Plus,
@@ -69,19 +70,6 @@ interface TariffPlan {
   valid_to: string | null;
   status: "Active" | "Archived";
   description: string | null;
-  created_at: string | null;
-  updated_at: string | null;
-}
-
-interface TariffService {
-  id: number;
-  tariff_id: number;
-  name: string;
-  price: string;
-  unit: string;
-  type: "Fixed" | "Variable";
-  discount: string | null;
-  category: "Delivery" | "Storage";
   created_at: string | null;
   updated_at: string | null;
 }
@@ -963,9 +951,7 @@ export default function ClientDetailsPage() {
             </DrawerClose>
             <Button
               onClick={() =>
-                editingServiceId
-                  ? handleUpdateService()
-                  : handleCreateService()
+                editingServiceId ? handleUpdateService() : handleCreateService()
               }
               disabled={
                 submitting ||

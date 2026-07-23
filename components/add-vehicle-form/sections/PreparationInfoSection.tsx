@@ -28,7 +28,9 @@ export function PreparationInfoSection({
 
         if (response.ok) {
           const newPrepType = await response.json();
-          await queryClient.invalidateQueries({ queryKey: ["preparation-types"] });
+          await queryClient.invalidateQueries({
+            queryKey: ["preparation-types"],
+          });
           return newPrepType;
         } else {
           console.error("Failed to create preparation type");
@@ -39,7 +41,7 @@ export function PreparationInfoSection({
         return null;
       }
     },
-    [queryClient]
+    [queryClient],
   );
 
   // Fetch preparation types
@@ -82,9 +84,9 @@ export function PreparationInfoSection({
           name="preparation_type_id"
           label="Tipo de Preparación"
           placeholder="Buscar tipo de preparación..."
-          options={prepTypes.map((p: any) => ({ 
-            value: String(p.id), 
-            label: p.name 
+          options={prepTypes.map((p: { id: number; name: string }) => ({
+            value: String(p.id),
+            label: p.name,
           }))}
           onCreateNew={handleCreatePrepType}
         />

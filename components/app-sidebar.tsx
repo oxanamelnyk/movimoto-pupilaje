@@ -2,20 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
-  Frame,
-  GalleryVerticalEnd,
-  Map,
-  Motorbike,
-  PieChart,
-  Settings2,
-  SquareTerminal,
-  Users,
-} from "lucide-react";
+import { Users } from "lucide-react";
 
 import {
   Sidebar,
@@ -25,7 +12,6 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { NavMain } from "./ui/nav-main";
-import { NavProjects } from "./ui/nav-projects";
 import { NavUser } from "./ui/nav-user";
 
 // This is sample data.

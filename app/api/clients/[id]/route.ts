@@ -17,7 +17,7 @@ export async function GET(
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
     }
     return NextResponse.json(client);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch client" },
       { status: 500 },
@@ -60,7 +60,7 @@ export async function DELETE(
     const id = Number((await params).id);
     await deleteClient(id);
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to delete client" },
       { status: 500 },

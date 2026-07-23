@@ -9,7 +9,6 @@ This project is a Next.js application using the App Router for managing vehicle 
 - React 19
 - MySQL
 - Drizzle ORM
-- TanStack Router
 - TanStack React Query
 - TanStack React Form
 - TanStack React Table

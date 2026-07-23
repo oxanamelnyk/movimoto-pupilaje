@@ -1,16 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
+import type { RowDataPacket } from "mysql2";
+
 import { clientCreateSchema } from "@/validators/clients";
-import { query } from "@/db";
+import { query, execute } from "@/db";
 import { getPupilajeclients } from "@/db/queries";
+
+type ExistingClientRow = RowDataPacket & {
+  id: number;
+};
 
 export async function GET() {
   try {
     const clients = await getPupilajeclients();
+
     return NextResponse.json(clients);
   } catch (error: unknown) {
     console.error("Failed to fetch clients:", error);
-    // Return empty array on error (table might not exist)
+
     return NextResponse.json([]);
   }
 }
@@ -20,47 +27,54 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = clientCreateSchema.parse(body);
 
-    if (!data.name || typeof data.name !== "string" || data.name.trim() === "") {
+    if (!data.name || data.name.trim() === "") {
       return NextResponse.json(
         { error: "Client name is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Check if client already exists
-    const existingClient = await query(
+    const trimmedName = data.name.trim();
+
+    const existingClient = await query<ExistingClientRow[]>(
       "SELECT id FROM clients WHERE name = ?",
-      [data.name]
+      [trimmedName],
     );
 
     if (existingClient.length > 0) {
       return NextResponse.json(existingClient[0], { status: 200 });
     }
 
-    // Create new client
-    const result = await query(
+    const [result] = await execute(
       "INSERT INTO clients (name, phone, email) VALUES (?, ?, ?)",
-      [data.name.trim(), data.phone || null, data.email || null]
+      [trimmedName, data.phone || null, data.email || null],
     );
 
+    const insertResult = result as { insertId: number };
     return NextResponse.json(
-      { 
-        id: (result as any).insertId, 
-        name: data.name.trim(),
+      {
+        id: insertResult.insertId,
+        name: trimmedName,
         phone: data.phone || null,
-        email: data.email || null 
+        email: data.email || null,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error: unknown) {
     if (error instanceof ZodError) {
-      console.error("Validation error:", error.errors);
+      console.error("Validation error:", error.issues);
+
       return NextResponse.json(
-        { error: "Validation error", details: error.errors },
+        {
+          error: "Validation error",
+          details: error.issues,
+        },
         { status: 400 },
       );
     }
+
     console.error("Error creating client:", error);
+
     return NextResponse.json(
       { error: "Failed to create client" },
       { status: 500 },

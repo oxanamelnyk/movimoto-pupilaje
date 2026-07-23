@@ -1,11 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { drizzle } from "drizzle-orm/mysql2";
+
+import { db } from "@/db";
 import * as schema from "@/db/schema";
+
+type InvoiceItemInput = {
+  vehicle_id: number | string;
+  registration_identity?: string | null;
+  description: string;
+  quantity: number | string;
+  unit_price: number | string;
+  amount: number | string;
+};
+
+type InvoiceRequestBody = {
+  client_id: number | string;
+  invoice_number: string;
+  invoice_date: string;
+  period_type: string;
+  period_start: string;
+  period_end: string;
+  subtotal: number | string;
+  tax_percentage?: number | string;
+  tax_amount: number | string;
+  total: number | string;
+  items?: InvoiceItemInput[];
+  notes?: string | null;
+};
 
 export async function POST(request: NextRequest) {
   try {
-    const db = drizzle(process.env.DATABASE_URL!, { schema });
-    const body = await request.json();
+    const body = (await request.json()) as InvoiceRequestBody;
 
     const {
       client_id,
@@ -22,7 +46,6 @@ export async function POST(request: NextRequest) {
       notes,
     } = body;
 
-    // Validate required fields
     if (
       !client_id ||
       !invoice_number ||
@@ -33,15 +56,13 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
-    // Generate unique invoice ID
     const invoiceId = `INV-${Date.now()}`;
 
-    // Insert invoice into database
-    const result = await db.insert(schema.invoices).values({
+    await db.insert(schema.invoices).values({
       id: invoiceId,
       client_id: Number(client_id),
       invoice_number,
@@ -57,9 +78,8 @@ export async function POST(request: NextRequest) {
       status: "draft",
     });
 
-    // Insert invoice items
     if (items.length > 0) {
-      const itemsToInsert = items.map((item: any, index: number) => ({
+      const itemsToInsert = items.map((item, index) => ({
         id: `${invoiceId}-${index}`,
         invoice_id: invoiceId,
         vehicle_id: Number(item.vehicle_id),
@@ -78,22 +98,20 @@ export async function POST(request: NextRequest) {
         message: "Invoice created successfully",
         invoiceId,
       },
-      { status: 201 },
+      { status: 201 }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Invoice creation error:", error);
+
     return NextResponse.json(
       { error: "Failed to create invoice" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
 
 export async function GET() {
   try {
-    const db = drizzle(process.env.DATABASE_URL!, { schema });
-
-    // Fetch invoices from database
     const invoices = await db.select().from(schema.invoices);
 
     return NextResponse.json(
@@ -101,13 +119,14 @@ export async function GET() {
         invoices,
         message: "Invoices fetched successfully",
       },
-      { status: 200 },
+      { status: 200 }
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Fetch invoices error:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch invoices" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

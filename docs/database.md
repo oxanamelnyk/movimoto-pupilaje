@@ -69,26 +69,26 @@ import { vehicles } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 // SELECT with where clause
-const vehicle = await db.select()
+const vehicle = await db
+  .select()
   .from(vehicles)
   .where(eq(vehicles.id, vehicleId))
   .limit(1);
 
 // INSERT
-const newVehicle = await db.insert(vehicles)
-  .values({
-    vin: "ABC123",
-    brand: "Honda",
-  });
+const newVehicle = await db.insert(vehicles).values({
+  vin: "ABC123",
+  brand: "Honda",
+});
 
 // UPDATE
-const updated = await db.update(vehicles)
+const updated = await db
+  .update(vehicles)
   .set({ status: "stored" })
   .where(eq(vehicles.id, vehicleId));
 
 // DELETE
-await db.delete(vehicles)
-  .where(eq(vehicles.id, vehicleId));
+await db.delete(vehicles).where(eq(vehicles.id, vehicleId));
 ```
 
 ### Raw SQL usage
@@ -99,22 +99,16 @@ For complex queries, raw SQL with the connection pool from `db/index.ts`:
 import { query, execute } from "@/db";
 
 // Safe parameterized query
-const [rows] = await query(
-  "SELECT * FROM vehicles WHERE id = ?",
-  [id],
-);
+const [rows] = await query("SELECT * FROM vehicles WHERE id = ?", [id]);
 
 // Execute for INSERT/UPDATE/DELETE
-await execute(
-  "UPDATE vehicles SET status = ? WHERE id = ?",
-  ["stored", id],
-);
+await execute("UPDATE vehicles SET status = ? WHERE id = ?", ["stored", id]);
 ```
 
 **Never write:**
 
 ```typescript
-const query = `SELECT * FROM vehicles WHERE id = ${id}`;  // ❌ SQL injection!
+const query = `SELECT * FROM vehicles WHERE id = ${id}`; // ❌ SQL injection!
 ```
 
 ### Schema organization
@@ -192,6 +186,7 @@ When modifying the database:
 ### Query organization
 
 **Queries** (SELECT operations) are in `db/queries/`:
+
 - Organized by entity (e.g., `vehicles.ts`, `clients.ts`)
 - Exported as named functions
 - Take parameters for filtering and pagination
@@ -204,20 +199,17 @@ import { db } from "@/db";
 import { vehicles } from "@/db/schema";
 
 export async function getVehicles(offset: number, limit: number) {
-  return db.select()
-    .from(vehicles)
-    .offset(offset)
-    .limit(limit);
+  return db.select().from(vehicles).offset(offset).limit(limit);
 }
 
 export async function getVehicleCount() {
-  const result = await db.select({ count: count() })
-    .from(vehicles);
+  const result = await db.select({ count: count() }).from(vehicles);
   return result[0]?.count || 0;
 }
 ```
 
 **Mutations** (INSERT/UPDATE/DELETE operations) are in `db/mutations/`:
+
 - Organized by entity
 - Exported as named functions
 - Accept validated data
@@ -256,6 +248,7 @@ export const vehicleSelectSchema = createSelectSchema(vehicles);
 ### Connection pooling
 
 The connection pool is configured with:
+
 - **connectionLimit: 10** — maximum concurrent connections
 - **waitForConnections: true** — queue requests when limit reached
 
@@ -280,26 +273,31 @@ Transaction utilities are available in `db/transaction.ts`.
 ### Troubleshooting
 
 **Connection pool exhaustion**
+
 - Symptom: "too many active pools" error
 - Cause: Multiple pool instances created in different modules
 - Solution: Always import pool from `db/drizzle.ts`
 
 **Connection timeouts**
+
 - Symptom: Queries timeout or hang
 - Cause: Database is unreachable, credentials are wrong, or IP restrictions block the connection
 - Solution: Check `.env.local` has correct `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
 
 **Missing environment variables**
+
 - Symptom: "undefined" errors when accessing database
 - Cause: Environment variables not set
 - Solution: Verify `.env.local` exists and contains all required variables
 
 **Idle connections closed**
+
 - Symptom: "Connection lost" after prolonged inactivity
 - Cause: Database provider closes idle connections (common with cloud databases)
 - Solution: Enable connection keep-alive or increase wait timeout
 
 **Database IP restrictions**
+
 - Symptom: Connection refused when deploying to production
 - Cause: Database allows connections only from specific IPs
 - Solution: Add deployment platform's IP range to database firewall rules (e.g., Vercel IPs for Vercel deployments)

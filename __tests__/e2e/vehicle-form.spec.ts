@@ -1,200 +1,191 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+
+const API_URL = "http://localhost:3000";
+
+async function openVehicleForm(page: Page): Promise<void> {
+  await page.goto(API_URL);
+  await page.waitForLoadState("networkidle");
+
+  await page
+    .getByRole("button", { name: "Añadir Moto" })
+    .click();
+
+  await expect(
+    page.getByText("Información del Vehículo")
+  ).toBeVisible();
+}
+
+async function selectOption(
+  page: Page,
+  placeholder: string,
+  option: string,
+  useLast = false
+): Promise<void> {
+  const trigger = page
+    .getByRole("button", { name: new RegExp(placeholder, "i") });
+
+  if (useLast) {
+    await trigger.last().click();
+  } else {
+    await trigger.first().click();
+  }
+
+  await page.getByText(option, { exact: true }).click();
+}
+
+async function fillRequiredVehicleFields(page: Page): Promise<void> {
+  await selectOption(page, "Seleccionar cliente", "Juan García");
+  await selectOption(page, "Seleccionar marca", "Honda");
+  await selectOption(page, "Seleccionar modelo", "CB500F");
+  await selectOption(
+    page,
+    "Seleccionar estado",
+    "Almacenado",
+    true
+  );
+  await selectOption(
+    page,
+    "Seleccionar ubicación",
+    "Sant Climent"
+  );
+}
+
+async function submitVehicleForm(page: Page): Promise<void> {
+  await page.getByRole("button", { name: "Guardar" }).click();
+}
+
+async function expectVehicleFormClosed(page: Page): Promise<void> {
+  await expect(
+    page.getByText("Información del Vehículo")
+  ).not.toBeVisible({ timeout: 5000 });
+}
 
 test.describe("Vehicle Form - E2E Tests", () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to the form page
-    await page.goto("http://localhost:3000/");
-    // Wait for the page to load
+    await page.goto(API_URL);
     await page.waitForLoadState("networkidle");
   });
 
   test("should display the form with all fields", async ({ page }) => {
-    // Check form title
-    await expect(page.locator("text=Almacenamiento de Motos")).toBeVisible();
+    await expect(
+      page.getByText("Almacenamiento de Motos")
+    ).toBeVisible();
 
-    // Check all labels are present
-    await expect(page.locator("text=Cliente")).toBeVisible();
-    await expect(page.locator("text=Estado del Vehículo")).toBeVisible();
-    await expect(page.locator("text=Marca")).toBeVisible();
-    await expect(page.locator("text=Modelo")).toBeVisible();
-    await expect(page.locator("text=Color")).toBeVisible();
+    await expect(page.getByText("Cliente", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("Estado del Vehículo", { exact: true })
+    ).toBeVisible();
+    await expect(page.getByText("Marca", { exact: true })).toBeVisible();
+    await expect(page.getByText("Modelo", { exact: true })).toBeVisible();
+    await expect(page.getByText("Color", { exact: true })).toBeVisible();
   });
 
-  test("should show validation errors when submitting empty form", async ({
+  test("should show validation errors when submitting an empty form", async ({
     page,
   }) => {
-    // Click the add vehicle button
-    await page.click("button:has-text('Añadir Moto')");
+    await openVehicleForm(page);
+    await submitVehicleForm(page);
 
-    // Wait for drawer to open
-    await page.waitForSelector("text=Información del Vehículo");
-
-    // Try to submit without filling fields
-    await page.click("button:has-text('Guardar')");
-
-    // Should see validation error messages
-    const errorMessages = page.locator(
-      "text=/Se requiere cliente|Se requiere marca|Se requiere estado|Se requiere ubicación/"
-    );
-    await expect(errorMessages.first()).toBeVisible();
-  });
-
-  test("should successfully submit form with all required fields", async ({
-    page,
-  }) => {
-    // Click the add vehicle button
-    await page.click("button:has-text('Añadir Moto')");
-
-    // Wait for drawer to open
-    await page.waitForSelector("text=Información del Vehículo");
-
-    // Fill client dropdown
-    await page.click('button:has-text("Seleccionar cliente")').first();
-    await page.click("text=Juan García");
-
-    // Fill brand dropdown
-    await page.click('button:has-text("Seleccionar marca")');
-    await page.click("text=Honda");
-
-    // Fill model dropdown
-    await page.click('button:has-text("Seleccionar modelo")');
-    await page.click("text=CB500F");
-
-    // Fill color dropdown
-    await page.click('button:has-text("Seleccionar color")');
-    await page.click("text=Black");
-
-    // Fill status dropdown
-    await page.click('button:has-text("Seleccionar estado")').last();
-    await page.click("text=Almacenado");
-
-    // Fill VIN
-    await page.fill('input[placeholder="Ingrese VIN"]', "TEST123456789");
-
-    // Fill plate number
-    await page.fill('input[placeholder="Ingrese número de placa"]', "ABC-1234");
-
-    // Fill location dropdown
-    await page.click('button:has-text("Seleccionar ubicación")');
-    await page.click("text=Sant Climent");
-
-    // Fill delivery place
-    await page.fill(
-      'input[placeholder="Ingrese lugar de entrega"]',
-      "Test Location"
+    const validationErrors = page.getByText(
+      /Se requiere cliente|Se requiere marca|Se requiere estado|Se requiere ubicación/i
     );
 
-    // Submit the form
-    await page.click("button:has-text('Guardar')");
-
-    // Wait for success feedback (drawer should close or message should appear)
-    await page.waitForTimeout(1000);
-
-    // Check if we're back to the main page (drawer is closed)
-    const drawer = page.locator("text=Información del Vehículo");
-    await expect(drawer).not.toBeVisible({ timeout: 5000 });
+    await expect(validationErrors.first()).toBeVisible();
   });
 
-  test("should populate dropdowns with data from database", async ({
+  test("should successfully submit the form with all required fields", async ({
     page,
   }) => {
-    // Click the add vehicle button
-    await page.click("button:has-text('Añadir Moto')");
+    await openVehicleForm(page);
+    await fillRequiredVehicleFields(page);
 
-    // Wait for drawer to open
-    await page.waitForSelector("text=Información del Vehículo");
+    await selectOption(page, "Seleccionar color", "Black");
 
-    // Check client dropdown has data
-    await page.click('button:has-text("Seleccionar cliente")').first();
-    await expect(page.locator("text=Juan García")).toBeVisible();
-    await expect(page.locator("text=María López")).toBeVisible();
+    await page
+      .getByPlaceholder("Ingrese VIN")
+      .fill("TEST123456789");
 
-    // Close dropdown
-    await page.press("Escape");
+    await page
+      .getByPlaceholder("Ingrese número de placa")
+      .fill("ABC-1234");
 
-    // Check brand dropdown has data
-    await page.click('button:has-text("Seleccionar marca")');
-    await expect(page.locator("text=Honda")).toBeVisible();
-    await expect(page.locator("text=Yamaha")).toBeVisible();
-    await expect(page.locator("text=BMW")).toBeVisible();
+    await page
+      .getByPlaceholder("Ingrese lugar de entrega")
+      .fill("Test Location");
 
-    // Close dropdown
-    await page.press("Escape");
+    await submitVehicleForm(page);
+    await expectVehicleFormClosed(page);
+  });
 
-    // Check status dropdown has data
-    await page.click('button:has-text("Seleccionar estado")').last();
-    await expect(page.locator("text=Almacenado")).toBeVisible();
-    await expect(page.locator("text=Preparado")).toBeVisible();
-    await expect(page.locator("text=Entregado")).toBeVisible();
+  test("should populate dropdowns with database data", async ({ page }) => {
+    await openVehicleForm(page);
+
+    await page
+      .getByRole("button", { name: /Seleccionar cliente/i })
+      .first()
+      .click();
+
+    await expect(page.getByText("Juan García", { exact: true })).toBeVisible();
+    await expect(page.getByText("María López", { exact: true })).toBeVisible();
+
+    await page.keyboard.press("Escape");
+
+    await page
+      .getByRole("button", { name: /Seleccionar marca/i })
+      .first()
+      .click();
+
+    await expect(page.getByText("Honda", { exact: true })).toBeVisible();
+    await expect(page.getByText("Yamaha", { exact: true })).toBeVisible();
+    await expect(page.getByText("BMW", { exact: true })).toBeVisible();
+
+    await page.keyboard.press("Escape");
+
+    await page
+      .getByRole("button", { name: /Seleccionar estado/i })
+      .last()
+      .click();
+
+    await expect(page.getByText("Almacenado", { exact: true })).toBeVisible();
+    await expect(page.getByText("Preparado", { exact: true })).toBeVisible();
+    await expect(page.getByText("Entregado", { exact: true })).toBeVisible();
   });
 
   test("should display placeholder text in empty selectors", async ({
     page,
   }) => {
-    // Click the add vehicle button
-    await page.click("button:has-text('Añadir Moto')");
+    await openVehicleForm(page);
 
-    // Wait for drawer to open
-    await page.waitForSelector("text=Información del Vehículo");
+    await expect(
+      page
+        .getByRole("button", { name: /Seleccionar cliente/i })
+        .first()
+    ).toContainText("Seleccionar cliente");
 
-    // Check that placeholders are visible
-    const clientPlaceholder = page
-      .locator('button:has-text("Seleccionar cliente")')
-      .first();
-    await expect(clientPlaceholder).toHaveText(/Seleccionar cliente/);
-
-    const marcaPlaceholder = page.locator(
-      'button:has-text("Seleccionar marca")'
-    );
-    await expect(marcaPlaceholder).toHaveText(/Seleccionar marca/);
+    await expect(
+      page
+        .getByRole("button", { name: /Seleccionar marca/i })
+        .first()
+    ).toContainText("Seleccionar marca");
   });
 
-  test("should handle date selection", async ({ page }) => {
-    // Click the add vehicle button
-    await page.click("button:has-text('Añadir Moto')");
+  test("should pre-fill entry date with today's date", async ({ page }) => {
+    await openVehicleForm(page);
 
-    // Wait for drawer to open
-    await page.waitForSelector("text=Información del Vehículo");
+    const today = new Date().toISOString().split("T")[0];
 
-    // The entry date should be pre-filled with today's date
-    const entryDateField = page.locator('input[value*="2026-06-28"]');
+    const entryDateField = page.locator(
+      `input[type="date"][value="${today}"]`
+    );
+
     await expect(entryDateField).toBeVisible();
   });
 
-  test("should allow optional fields to be empty", async ({ page }) => {
-    // Click the add vehicle button
-    await page.click("button:has-text('Añadir Moto')");
+  test("should allow optional fields to remain empty", async ({ page }) => {
+    await openVehicleForm(page);
+    await fillRequiredVehicleFields(page);
 
-    // Wait for drawer to open
-    await page.waitForSelector("text=Información del Vehículo");
-
-    // Fill only required fields
-    await page.click('button:has-text("Seleccionar cliente")').first();
-    await page.click("text=Juan García");
-
-    await page.click('button:has-text("Seleccionar marca")');
-    await page.click("text=Honda");
-
-    await page.click('button:has-text("Seleccionar modelo")');
-    await page.click("text=CB500F");
-
-    await page.click('button:has-text("Seleccionar estado")').last();
-    await page.click("text=Almacenado");
-
-    await page.click('button:has-text("Seleccionar ubicación")');
-    await page.click("text=Sant Climent");
-
-    // Leave VIN and plate empty (optional fields)
-    // Leave delivery place empty (optional field)
-
-    // Submit the form
-    await page.click("button:has-text('Guardar')");
-
-    // Should succeed without validation errors
-    await page.waitForTimeout(1000);
-
-    // Check if drawer is closed (success)
-    const drawer = page.locator("text=Información del Vehículo");
-    await expect(drawer).not.toBeVisible({ timeout: 5000 });
+    await submitVehicleForm(page);
+    await expectVehicleFormClosed(page);
   });
 });

@@ -35,11 +35,11 @@ async function addIndexes() {
     console.log("✅ Created idx_vehicles_status_id");
 
     console.log("\n✅ All indexes created successfully!");
-  } catch (error: any) {
-    if (error.code === "ER_DUP_KEYNAME") {
+  } catch (error: unknown) {
+    if ((error as { code?: string }).code === "ER_DUP_KEYNAME") {
       console.log("⚠️  Indexes already exist, skipping...");
     } else {
-      console.error("❌ Error creating indexes:", error.message);
+      console.error("❌ Error creating indexes:", (error as Error).message);
       throw error;
     }
   } finally {

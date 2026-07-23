@@ -4,11 +4,13 @@ import { LocationCreate, LocationUpdate } from "@/validators/locations";
 export async function createLocation(data: LocationCreate) {
   const sql = "INSERT INTO locations (name, created_at) VALUES (?, NOW())";
   const [result] = await execute(sql, [data.name]);
-  const locationId = (result as any).insertId;
+  const locationId = (result as { insertId: number }).insertId;
 
   if (!locationId) return null;
 
-  const location = await query("SELECT * FROM locations WHERE id = ?", [locationId]);
+  const location = await query("SELECT * FROM locations WHERE id = ?", [
+    locationId,
+  ]);
   return location[0] || null;
 }
 

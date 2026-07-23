@@ -1,17 +1,37 @@
 "use client";
 
-import { Control, useWatch } from "react-hook-form";
 import { useCallback } from "react";
+import { useWatch, type Control } from "react-hook-form";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
 import { TextField } from "../fields/TextField";
 import { SelectField } from "../fields/SelectField";
 import { ComboboxField } from "../fields/ComboboxField";
 import { FormSection } from "../FormSection";
-import { VehicleStorageFormData } from "@/schemas/vehicle-storage.schema";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { VehicleStorageFormData } from "@/schemas/vehicle-storage.schema";
+
+type OptionItem = {
+  id: number;
+  name: string;
+};
+
+type ModelItem = OptionItem & {
+  brand_id: number;
+};
 
 interface VehicleInfoSectionProps {
   control: Control<VehicleStorageFormData>;
-  clients: Array<{ id: number; name: string }>;
+  clients: OptionItem[];
+}
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Request failed: ${response.status}`);
+  }
+
+  return response.json() as Promise<T>;
 }
 
 export function VehicleInfoSection({
@@ -19,162 +39,209 @@ export function VehicleInfoSection({
   clients,
 }: VehicleInfoSectionProps) {
   const queryClient = useQueryClient();
-  const brand_id = useWatch({ control, name: "brand_id" });
 
-  // Handler to create new client
+  const brandId = useWatch({
+    control,
+    name: "brand_id",
+  });
+
   const handleCreateClient = useCallback(
     async (clientName: string) => {
       try {
         const response = await fetch("/api/clients", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: clientName }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: clientName,
+          }),
         });
 
-        if (response.ok) {
-          const newClient = await response.json();
-          // Invalidate the clients query to refresh the list
-          await queryClient.invalidateQueries({ queryKey: ["clients"] });
-          return newClient;
-        } else {
-          const errorData = await response.json();
-          console.error("Failed to create client:", response.status, errorData);
+        if (!response.ok) {
+          const errorData: unknown = await response.json();
+
+          console.error(
+            "Failed to create client:",
+            response.status,
+            errorData
+          );
+
           return null;
         }
-      } catch (error) {
+
+        const newClient = (await response.json()) as OptionItem;
+
+        await queryClient.invalidateQueries({
+          queryKey: ["clients"],
+        });
+
+        return newClient;
+      } catch (error: unknown) {
         console.error("Error creating client:", error);
         return null;
       }
     },
-    [queryClient],
+    [queryClient]
   );
 
-  // Handler to create new brand
   const handleCreateBrand = useCallback(
     async (brandName: string) => {
       try {
         const response = await fetch("/api/brands", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: brandName }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: brandName,
+          }),
         });
 
-        if (response.ok) {
-          const newBrand = await response.json();
-          await queryClient.invalidateQueries({ queryKey: ["brands"] });
-          return newBrand;
-        } else {
-          const errorData = await response.json();
-          console.error("Failed to create brand:", response.status, errorData);
+        if (!response.ok) {
+          const errorData: unknown = await response.json();
+
+          console.error(
+            "Failed to create brand:",
+            response.status,
+            errorData
+          );
+
           return null;
         }
-      } catch (error) {
+
+        const newBrand = (await response.json()) as OptionItem;
+
+        await queryClient.invalidateQueries({
+          queryKey: ["brands"],
+        });
+
+        return newBrand;
+      } catch (error: unknown) {
         console.error("Error creating brand:", error);
         return null;
       }
     },
-    [queryClient],
+    [queryClient]
   );
 
-  // Handler to create new model
   const handleCreateModel = useCallback(
     async (modelName: string) => {
-      if (!brand_id) {
-        console.error("Please select a brand before creating a model");
-        alert("Por favor, selecciona una marca antes de crear un modelo");
+      if (!brandId) {
+        console.error(
+          "Please select a brand before creating a model"
+        );
+
+        alert(
+          "Por favor, selecciona una marca antes de crear un modelo"
+        );
+
         return null;
       }
 
       try {
         const response = await fetch("/api/models", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
             name: modelName,
-            brand_id: parseInt(brand_id, 10),
+            brand_id: brandId,
           }),
         });
 
-        if (response.ok) {
-          const newModel = await response.json();
-          await queryClient.invalidateQueries({ queryKey: ["models"] });
-          return newModel;
-        } else {
-          const errorData = await response.json();
-          console.error("Failed to create model:", response.status, errorData);
+        if (!response.ok) {
+          const errorData: unknown = await response.json();
+
+          console.error(
+            "Failed to create model:",
+            response.status,
+            errorData
+          );
+
           return null;
         }
-      } catch (error) {
+
+        const newModel = (await response.json()) as ModelItem;
+
+        await queryClient.invalidateQueries({
+          queryKey: ["models"],
+        });
+
+        return newModel;
+      } catch (error: unknown) {
         console.error("Error creating model:", error);
         return null;
       }
     },
-    [queryClient, brand_id],
+    [queryClient, brandId]
   );
 
-  // Handler to create new color
   const handleCreateColor = useCallback(
     async (colorName: string) => {
       try {
         const response = await fetch("/api/colors", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: colorName }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: colorName,
+          }),
         });
 
-        if (response.ok) {
-          const newColor = await response.json();
-          // Invalidate the colors query to refresh the list
-          await queryClient.invalidateQueries({ queryKey: ["colors"] });
-          return newColor;
-        } else {
-          const errorData = await response.json();
-          console.error("Failed to create color:", response.status, errorData);
+        if (!response.ok) {
+          const errorData: unknown = await response.json();
+
+          console.error(
+            "Failed to create color:",
+            response.status,
+            errorData
+          );
+
           return null;
         }
-      } catch (error) {
+
+        const newColor = (await response.json()) as OptionItem;
+
+        await queryClient.invalidateQueries({
+          queryKey: ["colors"],
+        });
+
+        return newColor;
+      } catch (error: unknown) {
         console.error("Error creating color:", error);
         return null;
       }
     },
-    [queryClient],
+    [queryClient]
   );
 
-  // Fetch brands
-  const { data: brands = [] } = useQuery({
+  const { data: brands = [] } = useQuery<OptionItem[]>({
     queryKey: ["brands"],
-    queryFn: async () => {
-      const res = await fetch("/api/brands");
-      return res.json();
-    },
+    queryFn: () => fetchJson<OptionItem[]>("/api/brands"),
   });
 
-  // Fetch models
-  const { data: models = [] } = useQuery({
+  const { data: models = [] } = useQuery<ModelItem[]>({
     queryKey: ["models"],
-    queryFn: async () => {
-      const res = await fetch("/api/models");
-      return res.json();
-    },
+    queryFn: () => fetchJson<ModelItem[]>("/api/models"),
   });
 
-  // Fetch colors
-  const { data: colors = [] } = useQuery({
+  const { data: colors = [] } = useQuery<OptionItem[]>({
     queryKey: ["colors"],
-    queryFn: async () => {
-      const res = await fetch("/api/colors");
-      return res.json();
-    },
+    queryFn: () => fetchJson<OptionItem[]>("/api/colors"),
   });
 
-  // Fetch statuses
-  const { data: statuses = [] } = useQuery({
+  const { data: statuses = [] } = useQuery<OptionItem[]>({
     queryKey: ["vehicle-statuses"],
-    queryFn: async () => {
-      const res = await fetch("/api/vehicle-statuses");
-      return res.json();
-    },
+    queryFn: () =>
+      fetchJson<OptionItem[]>("/api/vehicle-statuses"),
   });
+
+  const filteredModels = brandId
+    ? models.filter((model) => model.brand_id === brandId)
+    : models;
 
   return (
     <FormSection title="Información del Vehículo">
@@ -184,9 +251,9 @@ export function VehicleInfoSection({
           name="client_id"
           label="Cliente"
           placeholder="Buscar cliente..."
-          options={clients.map((c) => ({
-            value: String(c.id),
-            label: c.name || "",
+          options={clients.map((client) => ({
+            value: String(client.id),
+            label: client.name || "",
           }))}
           onCreateNew={handleCreateClient}
         />
@@ -196,9 +263,9 @@ export function VehicleInfoSection({
           name="status_id"
           label="Estado del Vehículo"
           placeholder="Seleccionar estado"
-          options={statuses.map((s: any) => ({
-            value: String(s.id),
-            label: s.name,
+          options={statuses.map((status) => ({
+            value: String(status.id),
+            label: status.name,
           }))}
         />
       </div>
@@ -209,9 +276,9 @@ export function VehicleInfoSection({
           name="brand_id"
           label="Marca"
           placeholder="Buscar marca..."
-          options={brands.map((b: any) => ({
-            value: String(b.id),
-            label: b.name,
+          options={brands.map((brand) => ({
+            value: String(brand.id),
+            label: brand.name,
           }))}
           onCreateNew={handleCreateBrand}
         />
@@ -221,9 +288,9 @@ export function VehicleInfoSection({
           name="model_id"
           label="Modelo"
           placeholder="Buscar modelo..."
-          options={models.map((m: any) => ({
-            value: String(m.id),
-            label: m.name,
+          options={filteredModels.map((model) => ({
+            value: String(model.id),
+            label: model.name,
           }))}
           onCreateNew={handleCreateModel}
         />
@@ -236,14 +303,15 @@ export function VehicleInfoSection({
           label="Bastidor / Matrícula"
           placeholder="Ingrese Bastidor / Matrícula"
         />
+
         <ComboboxField
           control={control}
           name="color_id"
           label="Color"
           placeholder="Buscar color..."
-          options={colors.map((c: any) => ({
-            value: String(c.id),
-            label: c.name,
+          options={colors.map((color) => ({
+            value: String(color.id),
+            label: color.name,
           }))}
           onCreateNew={handleCreateColor}
         />

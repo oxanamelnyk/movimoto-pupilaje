@@ -58,7 +58,6 @@ export function SignupForm() {
           </div>
         )}
 
-        {/* eslint-disable-next-line react/no-children-prop */}
         <form.Field
           name="email"
           validators={{
@@ -89,7 +88,6 @@ export function SignupForm() {
           )}
         />
 
-        {/* eslint-disable-next-line react/no-children-prop */}
         <form.Field
           name="name"
           validators={{

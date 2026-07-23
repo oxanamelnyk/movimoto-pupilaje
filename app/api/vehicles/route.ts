@@ -60,17 +60,21 @@ export async function POST(request: NextRequest) {
 
     console.log("✅ Vehicle and related records created successfully");
     return NextResponse.json(result, { status: 201 });
-  } catch (error: any) {
-    if (error.name === "ZodError") {
-      console.error("❌ Validation error:", error.errors);
+  } catch (error: unknown) {
+    const err = error as { name?: string; errors?: unknown };
+    if (err.name === "ZodError") {
+      console.error("❌ Validation error:", err.errors);
       return NextResponse.json(
-        { error: "Validation error", details: error.errors },
+        { error: "Validation error", details: err.errors },
         { status: 400 },
       );
     }
-    console.error("❌ Error creating vehicle:", error.message || error);
+    console.error(
+      "❌ Error creating vehicle:",
+      (error as Error).message || error,
+    );
     return NextResponse.json(
-      { error: error.message || "Failed to create vehicle" },
+      { error: (error as Error).message || "Failed to create vehicle" },
       { status: 500 },
     );
   }

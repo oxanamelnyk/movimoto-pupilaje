@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +41,6 @@ interface Client {
 export default function ClientsPage() {
   const router = useRouter();
   const [clients, setClients] = useState<Client[]>([]);
-  const [filteredClients, setFilteredClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +54,6 @@ export default function ClientsPage() {
         if (!response.ok) throw new Error("Failed to fetch clients");
         const data = await response.json();
         setClients(data);
-        setFilteredClients(data);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to fetch clients",
@@ -68,16 +66,15 @@ export default function ClientsPage() {
     fetchClients();
   }, []);
 
-  // Search/filter functionality
-  useEffect(() => {
-    const filtered = clients.filter(
+  // Compute filtered clients
+  const filteredClients = useMemo(() => {
+    return clients.filter(
       (client) =>
         client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ??
           false) ||
         (client.phone?.includes(searchTerm) ?? false),
     );
-    setFilteredClients(filtered);
   }, [searchTerm, clients]);
 
   const handleDeleteClient = async (id: number) => {

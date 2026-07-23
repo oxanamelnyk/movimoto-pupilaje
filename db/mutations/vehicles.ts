@@ -1,5 +1,7 @@
+import type { ExecuteValues } from "mysql2";
 import { withTransaction } from "@/db/transaction";
-import { VehicleCreate, VehicleUpdate } from "@/validators/vehicles";
+import { execute } from "@/db";
+import { VehicleCreate } from "@/validators/vehicles";
 
 export async function createVehicle(data: VehicleCreate) {
   // Wrap all operations in a transaction
@@ -19,7 +21,7 @@ export async function createVehicle(data: VehicleCreate) {
       ],
     );
 
-    const vehicleId = (vehicleResult as any).insertId;
+    const vehicleId = (vehicleResult as { insertId: number }).insertId;
 
     // Create storage record if provided
     if (data.entry_date && data.location_id) {
@@ -60,11 +62,11 @@ export async function createVehicle(data: VehicleCreate) {
   });
 }
 
-export async function updateVehicle(id: string | number, data: any) {
+export async function updateVehicle(id: string | number, data: unknown) {
   return withTransaction(async ({ execute, query }) => {
-    const vehicleFields: Record<string, any> = {};
-    const storageData: Record<string, any> = {};
-    const preparationData: Record<string, any> = {};
+    const vehicleFields: Record<string, unknown> = {};
+    const storageData: Record<string, unknown> = {};
+    const preparationData: Record<string, unknown> = {};
 
     // Separate vehicle, storage, and preparation data
     const vehicleKeys = [
@@ -89,7 +91,7 @@ export async function updateVehicle(id: string | number, data: any) {
       "preparation_type_id",
     ];
 
-    Object.entries(data).forEach(([key, value]) => {
+    Object.entries(data as Record<string, unknown>).forEach(([key, value]) => {
       // Skip undefined or null values for id-based fields
       if (
         (key === "location_id" || key === "preparation_type_id") &&
@@ -115,7 +117,7 @@ export async function updateVehicle(id: string | number, data: any) {
       const values = Object.values(vehicleFields);
 
       await execute(`UPDATE vehicles SET ${fields} WHERE id = ?`, [
-        ...values,
+        ...(values as (ExecuteValues | null)[]),
         id,
       ]);
     }
@@ -127,7 +129,7 @@ export async function updateVehicle(id: string | number, data: any) {
         [id],
       );
 
-      if ((storageRecord as any[]).length > 0) {
+      if ((storageRecord as unknown[]).length > 0) {
         // Update existing record
         const fields = Object.keys(storageData)
           .map((key) => `${key} = ?`)
@@ -136,7 +138,7 @@ export async function updateVehicle(id: string | number, data: any) {
 
         await execute(
           `UPDATE vehicle_storage SET ${fields} WHERE vehicle_id = ?`,
-          [...values, id],
+          [...(values as (ExecuteValues | null)[]), id],
         );
       } else if (storageData.entry_date && storageData.location_id) {
         // Insert new record
@@ -145,10 +147,10 @@ export async function updateVehicle(id: string | number, data: any) {
            VALUES (?, ?, ?, ?, ?, NOW())`,
           [
             id,
-            storageData.entry_date,
-            storageData.exit_date || null,
-            storageData.location_id,
-            storageData.delivery_place || null,
+            storageData.entry_date as ExecuteValues,
+            (storageData.exit_date as ExecuteValues | null) || null,
+            storageData.location_id as ExecuteValues,
+            (storageData.delivery_place as ExecuteValues | null) || null,
           ],
         );
       }
@@ -161,7 +163,7 @@ export async function updateVehicle(id: string | number, data: any) {
         [id],
       );
 
-      if ((prepRecord as any[]).length > 0) {
+      if ((prepRecord as unknown[]).length > 0) {
         // Update existing record
         const fields = Object.keys(preparationData)
           .map((key) => `${key} = ?`)
@@ -170,7 +172,7 @@ export async function updateVehicle(id: string | number, data: any) {
 
         await execute(
           `UPDATE vehicle_preparation SET ${fields} WHERE vehicle_id = ?`,
-          [...values, id],
+          [...(values as (ExecuteValues | null)[]), id],
         );
       } else if (
         Object.values(preparationData).some(
@@ -183,17 +185,18 @@ export async function updateVehicle(id: string | number, data: any) {
            VALUES (?, ?, ?, ?, ?, NOW())`,
           [
             id,
-            preparationData.request_date || null,
-            preparationData.requested_by || null,
-            preparationData.preparation_date || null,
-            preparationData.preparation_type_id || null,
+            (preparationData.request_date as ExecuteValues | null) || null,
+            (preparationData.requested_by as ExecuteValues | null) || null,
+            (preparationData.preparation_date as ExecuteValues | null) || null,
+            (preparationData.preparation_type_id as ExecuteValues | null) ||
+              null,
           ],
         );
       }
     }
 
     const result = await query(`SELECT * FROM vehicles WHERE id = ?`, [id]);
-    return (result as any[])[0] || null;
+    return (result as unknown[])[0] || null;
   });
 }
 

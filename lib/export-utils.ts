@@ -4,8 +4,8 @@ import * as XLSX from "xlsx";
  * Export vehicles data to Excel format (.xlsx)
  */
 export function exportVehiclesToExcel(
-  vehicles: any[],
-  fileName: string = "vehicles.xlsx"
+  vehicles: unknown[],
+  fileName: string = "vehicles.xlsx",
 ) {
   if (vehicles.length === 0) {
     console.warn("No vehicles to export");
@@ -33,26 +33,27 @@ export function exportVehiclesToExcel(
 
     const data: (string | number)[][] = [headers];
 
-    vehicles.forEach((vehicle) => {
+    vehicles.forEach((v) => {
+      const vehicle = v as Record<string, unknown>;
       const diasTotal = calculateDaysBetween(
-        vehicle.entry_date,
-        vehicle.exit_date
+        vehicle.entry_date as string,
+        vehicle.exit_date as string,
       );
       const row = [
-        vehicle.client_name || "",
-        vehicle.status_name || "",
-        vehicle.brand_name || "",
-        vehicle.model_name || "",
-        vehicle.registration_identity || "",
-        vehicle.color_name || "",
-        formatDateForExport(vehicle.entry_date),
-        formatDateForExport(vehicle.exit_date),
+        (vehicle.client_name as string) || "",
+        (vehicle.status_name as string) || "",
+        (vehicle.brand_name as string) || "",
+        (vehicle.model_name as string) || "",
+        (vehicle.registration_identity as string) || "",
+        (vehicle.color_name as string) || "",
+        formatDateForExport(vehicle.entry_date as string),
+        formatDateForExport(vehicle.exit_date as string),
         diasTotal,
-        vehicle.location_name || "",
-        vehicle.delivery_place || "",
-        formatDateForExport(vehicle.preparation_date),
-        vehicle.preparation_type_name || "",
-        vehicle.notes || "",
+        (vehicle.location_name as string) || "",
+        (vehicle.delivery_place as string) || "",
+        formatDateForExport(vehicle.preparation_date as string),
+        (vehicle.preparation_type_name as string) || "",
+        (vehicle.notes as string) || "",
       ];
       data.push(row);
     });
@@ -75,9 +76,7 @@ export function exportVehiclesToExcel(
   }
 }
 
-function formatDateForExport(
-  date: string | null | undefined
-): string {
+function formatDateForExport(date: string | null | undefined): string {
   if (!date) return "";
   try {
     return new Date(date).toLocaleDateString("es-ES");
@@ -88,7 +87,7 @@ function formatDateForExport(
 
 function calculateDaysBetween(
   entryDate: string | null | undefined,
-  exitDate: string | null | undefined
+  exitDate: string | null | undefined,
 ): string {
   if (!entryDate) return "";
 
@@ -97,12 +96,12 @@ function calculateDaysBetween(
     const exit = exitDate ? new Date(exitDate) : new Date();
 
     let d1 = entry.getDate();
-    let m1 = entry.getMonth() + 1;
-    let y1 = entry.getFullYear();
+    const m1 = entry.getMonth() + 1;
+    const y1 = entry.getFullYear();
 
     let d2 = exit.getDate();
-    let m2 = exit.getMonth() + 1;
-    let y2 = exit.getFullYear();
+    const m2 = exit.getMonth() + 1;
+    const y2 = exit.getFullYear();
 
     if (d1 === 31) d1 = 30;
     if (d2 === 31 && (d1 === 30 || d1 === 31)) d2 = 30;
@@ -119,8 +118,8 @@ function calculateDaysBetween(
  * @deprecated Use exportVehiclesToExcel instead
  */
 export function exportVehiclesToCSV(
-  vehicles: any[],
-  fileName: string = "vehicles.csv"
+  vehicles: unknown[],
+  fileName: string = "vehicles.csv",
 ) {
   if (vehicles.length === 0) {
     console.warn("No vehicles to export");
@@ -141,7 +140,7 @@ export function exportVehiclesToCSV(
   document.body.removeChild(link);
 }
 
-function convertVehiclesToCSV(vehicles: any[]): string {
+function convertVehiclesToCSV(vehicles: unknown[]): string {
   if (vehicles.length === 0) {
     return "";
   }
@@ -171,30 +170,31 @@ function convertVehiclesToCSV(vehicles: any[]): string {
   rows.push(headers.map((h) => `"${h}"`).join(","));
 
   // Add data rows
-  vehicles.forEach((vehicle) => {
+  vehicles.forEach((vehicle: unknown) => {
+    const typedVehicle = vehicle as Record<string, unknown>;
     const diasTotal = calculateDaysBetween(
-      vehicle.entry_date,
-      vehicle.exit_date
+      typedVehicle.entry_date as string,
+      typedVehicle.exit_date as string,
     );
     const row = [
-      vehicle.client_name || "",
-      vehicle.status_name || "",
-      vehicle.brand_name || "",
-      vehicle.model_name || "",
-      vehicle.registration_identity || "",
-      vehicle.color_name || "",
-      formatDateForExport(vehicle.entry_date),
-      formatDateForExport(vehicle.exit_date),
+      (typedVehicle.client_name as string) || "",
+      (typedVehicle.status_name as string) || "",
+      (typedVehicle.brand_name as string) || "",
+      (typedVehicle.model_name as string) || "",
+      (typedVehicle.registration_identity as string) || "",
+      (typedVehicle.color_name as string) || "",
+      formatDateForExport(typedVehicle.entry_date as string),
+      formatDateForExport(typedVehicle.exit_date as string),
       diasTotal,
-      vehicle.location_name || "",
-      vehicle.delivery_place || "",
-      formatDateForExport(vehicle.preparation_date),
-      vehicle.preparation_type_name || "",
-      vehicle.notes || "",
+      (typedVehicle.location_name as string) || "",
+      (typedVehicle.delivery_place as string) || "",
+      formatDateForExport(typedVehicle.preparation_date as string),
+      (typedVehicle.preparation_type_name as string) || "",
+      (typedVehicle.notes as string) || "",
     ];
 
     rows.push(
-      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
     );
   });
 

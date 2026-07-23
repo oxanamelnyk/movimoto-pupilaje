@@ -3,12 +3,11 @@ import { vehicleStorageRecordCreateSchema } from "@/validators/vehicle_storage_r
 import { getVehicleStorageRecords } from "@/db/queries";
 import { createVehicleStorageRecord } from "@/db/mutations";
 
-
 export async function GET() {
   try {
     const records = await getVehicleStorageRecords();
     return NextResponse.json(records);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch vehicle storage records" },
       { status: 500 },
@@ -22,10 +21,11 @@ export async function POST(request: NextRequest) {
     const data = vehicleStorageRecordCreateSchema.parse(body);
     const record = await createVehicleStorageRecord(data);
     return NextResponse.json(record, { status: 201 });
-  } catch (error: any) {
-    if (error.name === "ZodError") {
+  } catch (error: unknown) {
+    const err = error as { name?: string; errors?: unknown };
+    if (err.name === "ZodError") {
       return NextResponse.json(
-        { error: "Validation error", details: error.errors },
+        { error: "Validation error", details: err.errors },
         { status: 400 },
       );
     }

@@ -29,11 +29,13 @@ const FormFieldContext = React.createContext<FormFieldContextValue>(
 const FormField = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & {
-    name: any;
+    name: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     control: any;
-    render: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render: (params: any) => React.ReactElement;
   }
->(({ name, control, render, ...props }, ref) => (
+>(({ name, control, render }) => (
   <FormFieldContext.Provider value={{ name }}>
     <Controller name={name} control={control} render={render} />
   </FormFieldContext.Provider>

@@ -151,10 +151,12 @@ export function useCreateVehicleStorageRecord() {
       }
       return responseData;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (response) => {
       // Invalidate both list and detail queries
       queryClient.invalidateQueries({ queryKey: ["vehicles"] });
-      queryClient.invalidateQueries({ queryKey: ["vehicle", variables.id] });
+      if (response?.id) {
+        queryClient.invalidateQueries({ queryKey: ["vehicle", response.id] });
+      }
       queryClient.invalidateQueries({ queryKey: ["vehicle-storage-records"] });
     },
   });
@@ -172,7 +174,7 @@ export function useUpdateVehicleStorageRecord() {
       data: VehicleStorageFormData;
     }) => {
       // Filter out fields that shouldn't be sent (0 values, empty strings for certain fields)
-      const cleanData: any = {};
+      const cleanData: Record<string, unknown> = {};
 
       if (data.client_id && data.client_id > 0)
         cleanData.client_id = data.client_id;

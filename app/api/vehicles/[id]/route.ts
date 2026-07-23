@@ -1,117 +1,211 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ZodError } from "zod";
+
 import { vehicleUpdateSchema } from "@/validators/vehicles";
 import { getVehicleById } from "@/db/queries";
 import { deleteVehicle, updateVehicle } from "@/db/mutations";
 
 export const dynamic = "force-dynamic";
 
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+type DatabaseError = Error & {
+  code?: string;
+};
+
+function parseVehicleId(value: string): number | null {
+  const id = Number(value);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return null;
+  }
+
+  return id;
+}
+
+function isDatabaseError(error: unknown): error is DatabaseError {
+  return error instanceof Error;
+}
+
+function isConnectionLimitError(error: unknown): boolean {
+  if (!isDatabaseError(error)) {
+    return false;
+  }
+
+  return (
+    error.message.includes("max_user_connections") ||
+    error.code === "ER_TOO_MANY_CONNECTIONS"
+  );
+}
+
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  _request: NextRequest,
+  { params }: RouteContext
 ) {
   try {
-    const id = (await params).id;
-    const vehicle = await getVehicleById(id);
-    if (!vehicle) {
-      return NextResponse.json({ error: "Vehicle not found" }, { status: 404 });
+    const rawId = (await params).id;
+    const id = parseVehicleId(rawId);
+
+    if (id === null) {
+      return NextResponse.json(
+        { error: "Invalid vehicle ID" },
+        { status: 400 }
+      );
     }
+
+    const vehicle = await getVehicleById(id);
+
+    if (!vehicle) {
+      return NextResponse.json(
+        { error: "Vehicle not found" },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(vehicle);
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error("Failed to fetch vehicle:", error);
+
     return NextResponse.json(
       { error: "Failed to fetch vehicle" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: RouteContext
 ) {
+  const rawId = (await params).id;
+  const id = parseVehicleId(rawId);
+
+  if (id === null) {
+    return NextResponse.json(
+      { error: "Invalid vehicle ID" },
+      { status: 400 }
+    );
+  }
+
+  let body: unknown;
+
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid JSON body" },
+      { status: 400 }
+    );
+  }
+
+  let data;
+
+  try {
+    data = vehicleUpdateSchema.parse(body);
+  } catch (error: unknown) {
+    if (error instanceof ZodError) {
+      console.error(
+        "Validation error details:",
+        JSON.stringify(error.issues, null, 2)
+      );
+
+      return NextResponse.json(
+        {
+          error: "Validation error",
+          details: error.issues,
+        },
+        { status: 400 }
+      );
+    }
+
+    throw error;
+  }
+
   let retries = 3;
-  let lastError: any;
+  let lastError: unknown;
 
   while (retries > 0) {
     try {
-      const id = (await params).id;
-      const body = await request.json();
       console.log(
-        "📝 Updating vehicle with data:",
-        JSON.stringify(body, null, 2),
+        "Updating vehicle with data:",
+        JSON.stringify(data, null, 2)
       );
 
-      const data = vehicleUpdateSchema.parse(body);
-      console.log("✅ Validation passed");
-
       const vehicle = await updateVehicle(id, data);
+
       if (!vehicle) {
         return NextResponse.json(
           { error: "Vehicle not found" },
-          { status: 404 },
+          { status: 404 }
         );
       }
+
       return NextResponse.json(vehicle);
-    } catch (error: any) {
+    } catch (error: unknown) {
       lastError = error;
 
-      // Check if it's a connection error
-      if (
-        error.message?.includes("max_user_connections") ||
-        error.code === "ER_TOO_MANY_CONNECTIONS"
-      ) {
-        retries--;
+      if (isConnectionLimitError(error)) {
+        retries -= 1;
+
         if (retries > 0) {
           console.warn(
-            `⏳ Connection pool exhausted, retrying... (${retries} left)`,
+            `Connection pool exhausted, retrying... (${retries} left)`
           );
-          // Wait before retrying (exponential backoff)
+
           await new Promise((resolve) =>
-            setTimeout(resolve, (4 - retries) * 500),
+            setTimeout(resolve, (4 - retries) * 500)
           );
+
           continue;
         }
       }
 
-      // Handle other errors
-      if (error.name === "ZodError") {
-        console.error(
-          "❌ Validation error details:",
-          JSON.stringify(error.errors, null, 2),
-        );
-        return NextResponse.json(
-          { error: "Validation error", details: error.errors },
-          { status: 400 },
-        );
-      }
-
-      console.error("❌ Error updating vehicle:", error.message || error);
+      console.error("Error updating vehicle:", error);
       break;
     }
   }
 
+  const message = isDatabaseError(lastError)
+    ? lastError.message
+    : "Unknown error";
+
   return NextResponse.json(
     {
-      error: lastError?.message?.includes("max_user_connections")
+      error: isConnectionLimitError(lastError)
         ? "Database connection limit reached. Please try again."
         : "Failed to update vehicle",
-      message: lastError?.message,
+      message,
     },
-    { status: 500 },
+    { status: 500 }
   );
 }
 
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  _request: NextRequest,
+  { params }: RouteContext
 ) {
   try {
-    const id = (await params).id;
+    const rawId = (await params).id;
+    const id = parseVehicleId(rawId);
+
+    if (id === null) {
+      return NextResponse.json(
+        { error: "Invalid vehicle ID" },
+        { status: 400 }
+      );
+    }
+
     await deleteVehicle(id);
+
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error("Failed to delete vehicle:", error);
+
     return NextResponse.json(
       { error: "Failed to delete vehicle" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

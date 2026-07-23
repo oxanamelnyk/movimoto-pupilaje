@@ -1,55 +1,78 @@
-import { NextResponse, NextRequest } from "next/server";
-import { query } from "@/db";
+import { NextRequest, NextResponse } from "next/server";
+import type { RowDataPacket } from "mysql2";
+
+import { query, execute } from "@/db";
+
+type StorageLocationRow = RowDataPacket & {
+  id: number;
+  name: string;
+};
+
+type ExistingStorageLocationRow = RowDataPacket & {
+  id: number;
+};
 
 export async function GET() {
   try {
-    const result = await query(
-      "SELECT id, name FROM storage_locations ORDER BY name"
+    const result = await query<StorageLocationRow[]>(
+      "SELECT id, name FROM storage_locations ORDER BY name",
     );
+
     return NextResponse.json(result);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching storage locations:", error);
+
     return NextResponse.json([], { status: 200 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { name } = body;
+    const body: unknown = await request.json();
 
-    if (!name || typeof name !== "string" || name.trim() === "") {
+    if (
+      typeof body !== "object" ||
+      body === null ||
+      !("name" in body) ||
+      typeof body.name !== "string" ||
+      body.name.trim() === ""
+    ) {
       return NextResponse.json(
         { error: "Location name is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Check if location already exists
-    const existingLocation = await query(
+    const trimmedName = body.name.trim();
+
+    const existingLocation = await query<ExistingStorageLocationRow[]>(
       "SELECT id FROM storage_locations WHERE name = ?",
-      [name]
+      [trimmedName],
     );
 
     if (existingLocation.length > 0) {
       return NextResponse.json(existingLocation[0], { status: 200 });
     }
 
-    // Create new location
-    const result = await query(
+    const [result] = await execute(
       "INSERT INTO storage_locations (name) VALUES (?)",
-      [name.trim()]
+      [trimmedName],
     );
 
+    const insertResult = result as { insertId: number };
     return NextResponse.json(
-      { id: result.insertId, name: name.trim() },
-      { status: 201 }
+      {
+        id: insertResult.insertId,
+        name: trimmedName,
+      },
+      { status: 201 },
     );
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error creating storage location:", error);
+
     return NextResponse.json(
       { error: "Failed to create storage location" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

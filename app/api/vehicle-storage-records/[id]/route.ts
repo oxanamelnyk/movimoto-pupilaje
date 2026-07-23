@@ -22,7 +22,7 @@ export async function GET(
       );
     }
     return NextResponse.json(record);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch vehicle storage record" },
       { status: 500 },
@@ -46,10 +46,11 @@ export async function PATCH(
       );
     }
     return NextResponse.json(record);
-  } catch (error: any) {
-    if (error.name === "ZodError") {
+  } catch (error: unknown) {
+    const err = error as { name?: string; errors?: unknown };
+    if (err.name === "ZodError") {
       return NextResponse.json(
-        { error: "Validation error", details: error.errors },
+        { error: "Validation error", details: err.errors },
         { status: 400 },
       );
     }
@@ -68,7 +69,7 @@ export async function DELETE(
     const id = (await params).id;
     await deleteVehicleStorageRecord(id);
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to delete vehicle storage record" },
       { status: 500 },

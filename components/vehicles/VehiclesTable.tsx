@@ -61,54 +61,56 @@ export function VehiclesTable({
   const { data: vehicleData = { vehicles: [], total: 0 }, isLoading } =
     useVehicles(page, itemsPerPage);
 
-  const vehicles = vehicleData.vehicles || [];
   const total = vehicleData.total || 0;
   const totalPages = Math.ceil(total / itemsPerPage);
 
-  // Apply filters to vehicles
   const filteredVehicles = useMemo(() => {
-    return vehicles.filter((vehicle: VehicleWithRelations) => {
-      if (!filters) return true;
-      
-      if (filters.clientId && vehicle.client_id !== filters.clientId) return false;
-      if (filters.statusId && vehicle.status_id !== filters.statusId) return false;
-      
-      if (filters.entryDateFrom && vehicle.entry_date) {
-        if (new Date(vehicle.entry_date) < new Date(filters.entryDateFrom)) return false;
-      }
-      if (filters.entryDateTo && vehicle.entry_date) {
-        if (new Date(vehicle.entry_date) > new Date(filters.entryDateTo)) return false;
-      }
-      
-      if (filters.exitDateFrom && vehicle.exit_date) {
-        if (new Date(vehicle.exit_date) < new Date(filters.exitDateFrom)) return false;
-      }
-      if (filters.exitDateTo && vehicle.exit_date) {
-        if (new Date(vehicle.exit_date) > new Date(filters.exitDateTo)) return false;
-      }
-      
-      return true;
-    });
-  }, [vehicles, filters]);
+    const filtered = vehicleData.vehicles.filter(
+      (vehicle: VehicleWithRelations) => {
+        if (!filters) return true;
+
+        if (filters.clientId && vehicle.client_id !== filters.clientId)
+          return false;
+        if (filters.statusId && vehicle.status_id !== filters.statusId)
+          return false;
+
+        if (filters.entryDateFrom && vehicle.entry_date) {
+          if (new Date(vehicle.entry_date) < new Date(filters.entryDateFrom))
+            return false;
+        }
+        if (filters.entryDateTo && vehicle.entry_date) {
+          if (new Date(vehicle.entry_date) > new Date(filters.entryDateTo))
+            return false;
+        }
+
+        if (filters.exitDateFrom && vehicle.exit_date) {
+          if (new Date(vehicle.exit_date) < new Date(filters.exitDateFrom))
+            return false;
+        }
+        if (filters.exitDateTo && vehicle.exit_date) {
+          if (new Date(vehicle.exit_date) > new Date(filters.exitDateTo))
+            return false;
+        }
+
+        return true;
+      },
+    );
+    return filtered;
+  }, [vehicleData, filters]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       const allIds = filteredVehicles.map((v: VehicleWithRelations) => v.id);
       onSelectionChange?.([...new Set([...selectedIds, ...allIds])]);
     } else {
-      const pageIds = new Set(filteredVehicles.map((v: VehicleWithRelations) => v.id));
-      onSelectionChange?.(
-        selectedIds.filter((id) => !pageIds.has(id))
+      const pageIds = new Set(
+        filteredVehicles.map((v: VehicleWithRelations) => v.id),
       );
+      onSelectionChange?.(selectedIds.filter((id) => !pageIds.has(id)));
     }
   };
 
-  const handleSelectRow = (
-    vehicleId: number,
-    checked: boolean,
-    event: React.MouseEvent
-  ) => {
-    event.stopPropagation();
+  const handleSelectRow = (vehicleId: number, checked: boolean) => {
     let newIds: number[];
     if (checked) {
       newIds = [...selectedIds, vehicleId];
@@ -121,13 +123,13 @@ export function VehiclesTable({
   const isAllSelected =
     filteredVehicles.length > 0 &&
     filteredVehicles.every((v: VehicleWithRelations) =>
-      selectedIds.includes(v.id)
+      selectedIds.includes(v.id),
     );
 
   // Get selected vehicles data for export
   const selectedVehicles = useMemo(() => {
     return filteredVehicles.filter((v: VehicleWithRelations) =>
-      selectedIds.includes(v.id)
+      selectedIds.includes(v.id),
     );
   }, [filteredVehicles, selectedIds]);
 
@@ -245,85 +247,87 @@ export function VehiclesTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredVehicles.map((vehicle: VehicleWithRelations, index: number) => {
-              const isSelected = selectedIds.includes(vehicle.id);
-              return (
-                <TableRow
-                  key={
-                    vehicle?.id ? `vehicle-${vehicle.id}` : `vehicle-${index}`
-                  }
-                  className={`hover:bg-gray-50 cursor-pointer ${
-                    isSelected ? "bg-blue-50" : ""
-                  }`}
-                  onClick={() => onRowClick?.(vehicle)}>
-                  <TableCell
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-12">
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={(e) =>
-                        handleSelectRow(vehicle.id, e.target.checked, e as any)
-                      }
-                      className="cursor-pointer"
-                    />
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {vehicle?.client_name || "-"}
-                  </TableCell>
-                  <TableCell>
-                    <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
-                      {vehicle?.status_name || "-"}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {getMonthName(vehicle?.entry_date)}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {vehicle?.entry_date
-                      ? formatDate(new Date(vehicle.entry_date))
-                      : "-"}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {getMonthName(vehicle?.exit_date)}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {vehicle?.exit_date
-                      ? formatDate(new Date(vehicle.exit_date))
-                      : "-"}
-                  </TableCell>
-                  <TableCell className="text-sm font-medium">
-                    {getDaysBetween(vehicle?.entry_date, vehicle?.exit_date)}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {vehicle?.brand_name || "-"}
-                  </TableCell>
-                  <TableCell className="font-mono text-xs">
-                    {vehicle?.registration_identity || "-"}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {vehicle?.color_name || "-"}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {vehicle?.preparation_date
-                      ? formatDate(new Date(vehicle.preparation_date))
-                      : "-"}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {vehicle?.preparation_type_name || "-"}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {vehicle?.location_name || "-"}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {vehicle?.delivery_place || "-"}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {vehicle?.notes || "-"}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {filteredVehicles.map(
+              (vehicle: VehicleWithRelations, index: number) => {
+                const isSelected = selectedIds.includes(vehicle.id);
+                return (
+                  <TableRow
+                    key={
+                      vehicle?.id ? `vehicle-${vehicle.id}` : `vehicle-${index}`
+                    }
+                    className={`hover:bg-gray-50 cursor-pointer ${
+                      isSelected ? "bg-blue-50" : ""
+                    }`}
+                    onClick={() => onRowClick?.(vehicle)}>
+                    <TableCell
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-12">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) =>
+                          handleSelectRow(vehicle.id, e.target.checked)
+                        }
+                        className="cursor-pointer"
+                      />
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {vehicle?.client_name || "-"}
+                    </TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+                        {vehicle?.status_name || "-"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {getMonthName(vehicle?.entry_date)}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {vehicle?.entry_date
+                        ? formatDate(new Date(vehicle.entry_date))
+                        : "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {getMonthName(vehicle?.exit_date)}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {vehicle?.exit_date
+                        ? formatDate(new Date(vehicle.exit_date))
+                        : "-"}
+                    </TableCell>
+                    <TableCell className="text-sm font-medium">
+                      {getDaysBetween(vehicle?.entry_date, vehicle?.exit_date)}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {vehicle?.brand_name || "-"}
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {vehicle?.registration_identity || "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {vehicle?.color_name || "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {vehicle?.preparation_date
+                        ? formatDate(new Date(vehicle.preparation_date))
+                        : "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {vehicle?.preparation_type_name || "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {vehicle?.location_name || "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {vehicle?.delivery_place || "-"}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {vehicle?.notes || "-"}
+                    </TableCell>
+                  </TableRow>
+                );
+              },
+            )}
           </TableBody>
         </Table>
       </div>

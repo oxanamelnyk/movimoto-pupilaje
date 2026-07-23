@@ -29,8 +29,8 @@ async function main() {
         console.log(`[${i + 1}/${statements.length}] Executing statement...`);
         await db.execute(sql.raw(statement));
         console.log(`✅ Success`);
-      } catch (error: any) {
-        if (error.message.includes("already exists")) {
+      } catch (error: unknown) {
+        if ((error as Error).message.includes("already exists")) {
           console.log(`⚠️  Already exists (skipping)`);
         } else {
           throw error;
@@ -43,7 +43,7 @@ async function main() {
     // Verify tables were created
     const result = (await db.execute(
       sql`SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ('clients', 'locations', 'vehicles', 'vehicle_storage_records')`,
-    )) as unknown as [Array<{ TABLE_NAME: string }>, any];
+    )) as unknown as [Array<{ TABLE_NAME: string }>, unknown];
 
     console.log("\n📊 Created tables:");
     const tableNames = result[0].map((row) => row.TABLE_NAME);

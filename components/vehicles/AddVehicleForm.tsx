@@ -31,7 +31,6 @@ export function AddVehicleForm({
   onClose,
   isLoading = false,
   clients = [],
-  locations = [],
   initialData,
   isEditMode = false,
 }: AddVehicleFormProps) {
@@ -59,13 +58,18 @@ export function AddVehicleForm({
     }
   };
 
+  // Filter clients to ensure all have non-null names
+  const validClients = clients.filter(
+    (c): c is { id: number; name: string } => c.name !== null,
+  );
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)}>
         <div className="p-4 space-y-3">
-          <VehicleInfoSection control={form.control} clients={clients} />
+          <VehicleInfoSection control={form.control} clients={validClients} />
 
-          <StorageInfoSection control={form.control} locations={locations} />
+          <StorageInfoSection control={form.control} />
 
           <PreparationInfoSection control={form.control} />
 

@@ -7,7 +7,8 @@ export async function createVehiclePreparation(data: {
   preparation_date?: string;
   preparation_type_id?: number;
 }) {
-  const sql = "INSERT INTO vehicle_preparation (vehicle_id, request_date, requested_by, preparation_date, preparation_type_id, created_at) VALUES (?, ?, ?, ?, ?, NOW())";
+  const sql =
+    "INSERT INTO vehicle_preparation (vehicle_id, request_date, requested_by, preparation_date, preparation_type_id, created_at) VALUES (?, ?, ?, ?, ?, NOW())";
   const [result] = await execute(sql, [
     data.vehicle_id,
     data.request_date || null,
@@ -15,40 +16,45 @@ export async function createVehiclePreparation(data: {
     data.preparation_date || null,
     data.preparation_type_id || null,
   ]);
-  const prepId = (result as any).insertId;
+  const prepId = (result as { insertId: number }).insertId;
   if (!prepId) return null;
-  const prep = await query("SELECT * FROM vehicle_preparation WHERE id = ?", [prepId]);
+  const prep = await query("SELECT * FROM vehicle_preparation WHERE id = ?", [
+    prepId,
+  ]);
   return prep[0] || null;
 }
 
-export async function updateVehiclePreparation(id: number, data: any) {
+export async function updateVehiclePreparation(id: number, data: unknown) {
+  const typedData = data as Record<string, unknown>;
   const fields = [];
-  const values: any[] = [];
-  if (data.vehicle_id !== undefined) {
+  const values: unknown[] = [];
+  if (typedData.vehicle_id !== undefined) {
     fields.push("vehicle_id = ?");
-    values.push(data.vehicle_id);
+    values.push(typedData.vehicle_id);
   }
-  if (data.request_date !== undefined) {
+  if (typedData.request_date !== undefined) {
     fields.push("request_date = ?");
-    values.push(data.request_date);
+    values.push(typedData.request_date);
   }
-  if (data.requested_by !== undefined) {
+  if (typedData.requested_by !== undefined) {
     fields.push("requested_by = ?");
-    values.push(data.requested_by);
+    values.push(typedData.requested_by);
   }
-  if (data.preparation_date !== undefined) {
+  if (typedData.preparation_date !== undefined) {
     fields.push("preparation_date = ?");
-    values.push(data.preparation_date);
+    values.push(typedData.preparation_date);
   }
-  if (data.preparation_type_id !== undefined) {
+  if (typedData.preparation_type_id !== undefined) {
     fields.push("preparation_type_id = ?");
-    values.push(data.preparation_type_id);
+    values.push(typedData.preparation_type_id);
   }
   if (fields.length === 0) return null;
   values.push(id);
   const sql = `UPDATE vehicle_preparation SET ${fields.join(", ")} WHERE id = ?`;
-  await execute(sql, values);
-  const result = await query("SELECT * FROM vehicle_preparation WHERE id = ?", [id]);
+  await execute(sql, values as Parameters<typeof execute>[1]);
+  const result = await query("SELECT * FROM vehicle_preparation WHERE id = ?", [
+    id,
+  ]);
   return result[0] || null;
 }
 

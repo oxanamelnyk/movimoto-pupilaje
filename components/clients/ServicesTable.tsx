@@ -1,6 +1,6 @@
 "use client";
 
-import { TariffService } from "@/app/dashboard/clients/types";
+import type { TariffService } from "@/types/tariff-service";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -35,7 +35,7 @@ export function ServicesTable({
   onDeleteService,
   isLoading = false,
 }: ServicesTableProps) {
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number): string => {
     return `€${price.toFixed(2)}`;
   };
 
@@ -43,6 +43,7 @@ export function ServicesTable({
     return (
       <div className="space-y-2">
         <p className="text-sm text-muted-foreground">No services yet</p>
+
         <Button
           variant="outline"
           size="sm"
@@ -65,25 +66,31 @@ export function ServicesTable({
             <TableHead>Type</TableHead>
             <TableHead>Unit</TableHead>
             <TableHead>Discount</TableHead>
-            <TableHead className="w-10"></TableHead>
+            <TableHead className="w-10" />
           </TableRow>
         </TableHeader>
+
         <TableBody>
           {services.map((service) => (
             <TableRow key={service.id}>
               <TableCell className="font-medium">{service.name}</TableCell>
+
               <TableCell className="text-right">
-                {formatPrice(service.price)}
+                {formatPrice(Number(service.price))}
               </TableCell>
+
               <TableCell>
-                <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800">
+                <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
                   {service.type}
                 </span>
               </TableCell>
+
               <TableCell>{service.unit}</TableCell>
+
               <TableCell>
-                {service.discount ? `${service.discount}%` : "—"}
+                {service.discount != null ? `${service.discount}%` : "—"}
               </TableCell>
+
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -91,10 +98,12 @@ export function ServicesTable({
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
+
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => onEditService(service)}>
                       Edit
                     </DropdownMenuItem>
+
                     <DropdownMenuItem
                       onClick={() => onDeleteService(service.id)}
                       className="text-red-600">
