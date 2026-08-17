@@ -44,7 +44,7 @@ export async function getVehicleById(id: number) {
       m.id as model_id, m.name as model_name,
       col.id as color_id, col.name as color_name,
       vs.id as status_id, vs.name as status_name,
-      vs2.id as vehicle_storage_id, vs2.entry_date, vs2.exit_date, vs2.location_id,
+      vs2.id as vehicle_storage_id, vs2.entry_date, vs2.exit_date, vs2.delivery_place, vs2.location_id,
       sl.name as location_name,
       vp.id as vehicle_preparation_id, vp.request_date, vp.requested_by, vp.preparation_date, vp.preparation_type_id,
       pt.name as preparation_type_name

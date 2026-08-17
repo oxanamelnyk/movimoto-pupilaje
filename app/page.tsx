@@ -148,9 +148,21 @@ export default function Page() {
     setIsDrawerOpen(true);
   };
 
-  const handleRowClick = (vehicle: VehicleWithRelations) => {
-    setSelectedVehicle(vehicle);
-    setIsDrawerOpen(true);
+  const handleRowClick = async (vehicle: VehicleWithRelations) => {
+    try {
+      const response = await fetch(`/api/vehicles/${vehicle.id}`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch vehicle details");
+      }
+
+      const vehicleDetails: VehicleWithRelations = await response.json();
+
+      setSelectedVehicle(vehicleDetails);
+      setIsDrawerOpen(true);
+    } catch (error) {
+      console.error("Error loading vehicle details:", error);
+    }
   };
 
   const handleExportExcel = () => {
