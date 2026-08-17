@@ -132,4 +132,10 @@
   [data-slot="drawer-content"] {
     touch-action: auto;
   }
+
+  [data-slot="drawer-content"][data-vaul-drawer-direction="left"],
+  [data-slot="drawer-content"][data-vaul-drawer-direction="right"] {
+    width: 33.333333vw !important;
+    max-width: none !important;
+  }
 }

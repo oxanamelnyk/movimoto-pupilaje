@@ -44,15 +44,16 @@ export function getMonthPeriods(
   let current = new Date(entry);
 
   while (current < exit) {
-    const monthStart = new Date(current.getFullYear(), current.getMonth(), 1);
-    const monthEnd = new Date(current.getFullYear(), current.getMonth() + 1, 0);
-
-    const periodStart = monthStart < entry ? entry : monthStart;
-    const periodEnd = monthEnd > exit ? exit : monthEnd;
+    const periodStart = new Date(current);
+    const nextMonth = new Date(
+      Date.UTC(current.getUTCFullYear(), current.getUTCMonth() + 1, 1),
+    );
+    const periodEnd = nextMonth > exit ? exit : nextMonth;
 
     const label = current.toLocaleDateString("es-ES", {
       year: "numeric",
       month: "long",
+      timeZone: "UTC",
     });
 
     periods.push({
@@ -61,7 +62,7 @@ export function getMonthPeriods(
       label: label.charAt(0).toUpperCase() + label.slice(1),
     });
 
-    current = new Date(current.getFullYear(), current.getMonth() + 2, 1);
+    current = periodEnd;
   }
 
   return periods;
@@ -88,6 +89,101 @@ export interface InvoiceLineItem {
   quantity: number;
   unitPrice: number;
   amount: number;
+}
+
+export interface TariffPricingService {
+  name: string;
+  price: string | number | null;
+  unit: string;
+  discount?: string | number | null;
+}
+
+function isDailyUnit(unit: string): boolean {
+  return unit
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase() === "dia";
+}
+
+function getDiscountedPrice(service: TariffPricingService): number {
+  const price = Number(service.price) || 0;
+  const discount = Number(service.discount) || 0;
+
+  return price * (1 - discount / 100);
+}
+
+export function calculateTariffPeriodCost(
+  entryDate: string,
+  exitDate: string | null,
+  services: TariffPricingService[],
+): { items: InvoiceLineItem[]; subtotal: number } {
+  const days = calculateDays(entryDate, exitDate);
+  const items = services.map((service) => {
+    const daily = isDailyUnit(service.unit);
+    const quantity = daily ? days : 1;
+    const unitPrice = getDiscountedPrice(service);
+
+    return {
+      description: daily
+        ? `${service.name} (${days} día${days > 1 ? "s" : ""})`
+        : service.name,
+      quantity,
+      unitPrice,
+      amount: quantity * unitPrice,
+    };
+  });
+
+  return {
+    items,
+    subtotal: items.reduce((sum, item) => sum + item.amount, 0),
+  };
+}
+
+export function calculateTariffMonthlyCost(
+  entryDate: string,
+  exitDate: string | null,
+  services: TariffPricingService[],
+): {
+  items: Array<{ month: string; items: InvoiceLineItem[]; subtotal: number }>;
+  totalSubtotal: number;
+} {
+  const periods = getMonthPeriods(entryDate, exitDate);
+  const items = periods.map((period, periodIndex) => {
+    const days = Math.max(
+      1,
+      Math.ceil(
+        (period.end.getTime() - period.start.getTime()) /
+          (1000 * 60 * 60 * 24),
+      ),
+    );
+    const periodItems = services
+      .filter((service) => isDailyUnit(service.unit) || periodIndex === 0)
+      .map((service) => {
+        const daily = isDailyUnit(service.unit);
+        const quantity = daily ? days : 1;
+        const unitPrice = getDiscountedPrice(service);
+
+        return {
+          description: daily
+            ? `${service.name} (${days} día${days > 1 ? "s" : ""})`
+            : service.name,
+          quantity,
+          unitPrice,
+          amount: quantity * unitPrice,
+        };
+      });
+
+    return {
+      month: period.label,
+      items: periodItems,
+      subtotal: periodItems.reduce((sum, item) => sum + item.amount, 0),
+    };
+  });
+
+  return {
+    items,
+    totalSubtotal: items.reduce((sum, period) => sum + period.subtotal, 0),
+  };
 }
 
 /**

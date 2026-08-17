@@ -27,16 +27,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  EditClientDrawer,
+  type ClientRecord,
+} from "@/components/clients/EditClientDrawer";
 
-interface Client {
-  id: number;
-  name: string;
-  phone: string | null;
-  email: string | null;
-  status: string;
-  created_at: string | null;
-  updated_at: string | null;
-}
+type Client = ClientRecord;
 
 export default function ClientsPage() {
   const router = useRouter();
@@ -44,6 +40,8 @@ export default function ClientsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingClientId, setEditingClientId] = useState<number | null>(null);
+  const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
 
   // Fetch clients
   useEffect(() => {
@@ -216,11 +214,10 @@ export default function ClientsPage() {
                               Ver detalles
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() =>
-                                router.push(
-                                  `/dashboard/clients/${client.id}/edit`,
-                                )
-                              }
+                              onClick={() => {
+                                setEditingClientId(client.id);
+                                setIsEditDrawerOpen(true);
+                              }}
                               className="cursor-pointer">
                               Editar
                             </DropdownMenuItem>
@@ -241,6 +238,19 @@ export default function ClientsPage() {
           )}
         </CardContent>
       </Card>
+
+      <EditClientDrawer
+        clientId={editingClientId}
+        open={isEditDrawerOpen}
+        onOpenChange={setIsEditDrawerOpen}
+        onSaved={(updatedClient) =>
+          setClients((current) =>
+            current.map((client) =>
+              client.id === updatedClient.id ? updatedClient : client,
+            ),
+          )
+        }
+      />
     </div>
   );
 }

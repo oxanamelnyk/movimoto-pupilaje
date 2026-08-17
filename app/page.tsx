@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Download, FileText } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { AddVehicleDrawer } from "@/components/vehicles/AddVehicleDrawer";
@@ -14,7 +15,6 @@ import {
   VehiclesTableFilters,
   type VehicleFilters,
 } from "@/components/vehicles/VehiclesTableFilters";
-import { InvoiceGenerator } from "@/components/invoices/InvoiceGenerator";
 import { exportVehiclesToExcel } from "@/lib/export-utils";
 import {
   useClients,
@@ -58,8 +58,8 @@ type VehicleWithRelations = {
 };
 
 export default function Page() {
+  const router = useRouter();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
 
   const [selectedVehicle, setSelectedVehicle] =
     useState<VehicleWithRelations | null>(null);
@@ -74,14 +74,6 @@ export default function Page() {
     exitDateFrom: undefined,
     exitDateTo: undefined,
   });
-
-  const pricingRates = {
-    dailyRate: 0.34,
-    handlingInOut: 3,
-    disassemblyWithoutWheels: 17,
-    disassemblyWithWheels: 24,
-    wasteDisposal: 2.5,
-  };
 
   const isEditMode = selectedVehicle !== null;
 
@@ -135,13 +127,6 @@ export default function Page() {
 
     return selectedVehicleIds.includes(vehicle.id);
   });
-
-  const selectedVehiclesForInvoice = allVehicles.filter((vehicle) =>
-    selectedVehicleIds.includes(vehicle.id)
-  );
-
-  const invoiceClientName =
-    selectedVehiclesForInvoice[0]?.client_name || "Cliente";
 
   const handleAddClick = () => {
     setSelectedVehicle(null);
@@ -245,7 +230,11 @@ export default function Page() {
               <Button
                 variant="outline"
                 className="shrink-0 gap-2"
-                onClick={() => setIsInvoiceOpen(true)}
+                onClick={() =>
+                  router.push(
+                    `/dashboard/invoices/new?vehicleIds=${selectedVehicleIds.join(",")}`,
+                  )
+                }
               >
                 <FileText className="h-4 w-4" />
                 Facturar ({selectedVehicleIds.length})
@@ -315,13 +304,6 @@ export default function Page() {
         />
       </AddVehicleDrawer>
 
-      <InvoiceGenerator
-        isOpen={isInvoiceOpen}
-        onClose={() => setIsInvoiceOpen(false)}
-        vehicles={selectedVehiclesForInvoice}
-        clientName={invoiceClientName}
-        pricingRates={pricingRates}
-      />
     </div>
   );
 }

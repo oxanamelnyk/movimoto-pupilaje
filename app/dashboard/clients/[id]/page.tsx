@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -41,6 +42,7 @@ import {
   DrawerClose,
 } from "@/components/ui/drawer";
 import { FormSection } from "@/components/add-vehicle-form/FormSection";
+import { EditClientDrawer } from "@/components/clients/EditClientDrawer";
 import type { TariffService } from "@/types/tariff-service";
 import {
   Pencil,
@@ -89,6 +91,7 @@ export default function ClientDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editClientDrawerOpen, setEditClientDrawerOpen] = useState(false);
   const [serviceDrawerOpen, setServiceDrawerOpen] = useState(false);
   const [editingServiceId, setEditingServiceId] = useState<number | null>(null);
   const [formData, setFormData] = useState<{
@@ -110,7 +113,7 @@ export default function ClientDetailsPage() {
   }>({
     name: "",
     price: "",
-    unit: "",
+    unit: "unidad",
     type: "Fixed",
     category: "Delivery",
     discount: "",
@@ -257,7 +260,7 @@ export default function ClientDetailsPage() {
       setServiceFormData({
         name: "",
         price: "",
-        unit: "",
+        unit: "unidad",
         type: "Fixed",
         category: "Delivery",
         discount: "",
@@ -274,10 +277,25 @@ export default function ClientDetailsPage() {
     setServiceFormData({
       name: service.name,
       price: service.price,
-      unit: service.unit,
+      unit: ["dia", "día"].includes(service.unit.toLowerCase())
+        ? "dia"
+        : "unidad",
       type: service.type as "Fixed" | "Variable",
       category: service.category as "Delivery" | "Storage",
       discount: service.discount || "",
+    });
+    setServiceDrawerOpen(true);
+  };
+
+  const handleOpenCreateService = (category: "Delivery" | "Storage") => {
+    setEditingServiceId(null);
+    setServiceFormData({
+      name: "",
+      price: "",
+      unit: "unidad",
+      type: "Fixed",
+      category,
+      discount: "",
     });
     setServiceDrawerOpen(true);
   };
@@ -325,7 +343,7 @@ export default function ClientDetailsPage() {
       setServiceFormData({
         name: "",
         price: "",
-        unit: "",
+        unit: "unidad",
         type: "Fixed",
         category: "Delivery",
         discount: "",
@@ -460,9 +478,7 @@ export default function ClientDetailsPage() {
               </div>
             </div>
             <Button
-              onClick={() =>
-                router.push(`/dashboard/clients/${client.id}/edit`)
-              }
+              onClick={() => setEditClientDrawerOpen(true)}
               variant="outline"
               size="sm">
               <Pencil className="mr-2 h-4 w-4" />
@@ -471,6 +487,17 @@ export default function ClientDetailsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <EditClientDrawer
+        clientId={client.id}
+        open={editClientDrawerOpen}
+        onOpenChange={setEditClientDrawerOpen}
+        onSaved={(updatedClient) =>
+          setClient((current) =>
+            current ? { ...current, ...updatedClient } : current,
+          )
+        }
+      />
 
       {/* Tabs */}
       <Card>
@@ -682,7 +709,11 @@ export default function ClientDetailsPage() {
                                     variant="outline"
                                     size="sm"
                                     className="w-full text-yellow-600"
-                                    onClick={() => setServiceDrawerOpen(true)}>
+                                    onClick={() =>
+                                      handleOpenCreateService(
+                                        category as "Delivery" | "Storage",
+                                      )
+                                    }>
                                     <Plus className="mr-2 h-4 w-4" />
                                     Añadir Servicio
                                   </Button>
@@ -850,36 +881,22 @@ export default function ClientDetailsPage() {
                 {/* Unit */}
                 <div className="space-y-2">
                   <Label htmlFor="service-unit">Unidad *</Label>
-                  <Input
-                    id="service-unit"
-                    placeholder="p.ej. día, unidad, moto"
-                    value={serviceFormData.unit}
-                    onChange={(e) =>
-                      setServiceFormData({
-                        ...serviceFormData,
-                        unit: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-
-                {/* Type */}
-                <div className="space-y-2">
-                  <Label htmlFor="service-type">Tipo</Label>
                   <Select
-                    value={serviceFormData.type}
+                    value={serviceFormData.unit}
                     onValueChange={(value) =>
                       setServiceFormData({
                         ...serviceFormData,
-                        type: value as "Fixed" | "Variable",
+                        unit: value,
                       })
                     }>
-                    <SelectTrigger id="service-type">
+                    <SelectTrigger id="service-unit" className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Fixed">Fijo</SelectItem>
-                      <SelectItem value="Variable">Variable</SelectItem>
+                      <SelectGroup>
+                        <SelectItem value="dia">Día</SelectItem>
+                        <SelectItem value="unidad">Unidad</SelectItem>
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
                 </div>
@@ -899,8 +916,10 @@ export default function ClientDetailsPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Delivery">Entrega</SelectItem>
-                      <SelectItem value="Storage">Almacenamiento</SelectItem>
+                      <SelectGroup>
+                        <SelectItem value="Delivery">Entrega</SelectItem>
+                        <SelectItem value="Storage">Almacenamiento</SelectItem>
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
                 </div>
@@ -940,7 +959,7 @@ export default function ClientDetailsPage() {
                   setServiceFormData({
                     name: "",
                     price: "",
-                    unit: "",
+                    unit: "unidad",
                     type: "Fixed",
                     category: "Delivery",
                     discount: "",

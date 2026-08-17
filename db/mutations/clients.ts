@@ -25,11 +25,11 @@ export async function updateClient(id: number, data: ClientUpdate) {
     fields.push("name = ?");
     values.push(data.name);
   }
-  if (data.phone) {
+  if (data.phone !== undefined) {
     fields.push("phone = ?");
     values.push(data.phone);
   }
-  if (data.email) {
+  if (data.email !== undefined) {
     fields.push("email = ?");
     values.push(data.email);
   }
