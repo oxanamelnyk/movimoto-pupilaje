@@ -19,6 +19,8 @@ interface InvoiceRow extends RowDataPacket {
   id: string;
   invoice_number: string;
   invoice_date: string;
+  period_start: string;
+  period_end: string;
   subtotal: string;
   tax_percentage: string;
   tax_amount: string;
@@ -26,17 +28,6 @@ interface InvoiceRow extends RowDataPacket {
   client_name: string;
   client_email: string | null;
   client_phone: string | null;
-}
-
-interface ItemRow extends RowDataPacket {
-  id: string;
-  registration_identity: string | null;
-  description: string;
-  quantity: string;
-  unit_price: string;
-  amount: string;
-  brand_name: string | null;
-  model_name: string | null;
 }
 
 export async function GET(_request: Request, { params }: RouteContext) {
@@ -60,23 +51,15 @@ export async function GET(_request: Request, { params }: RouteContext) {
       return Response.json({ error: "Invoice not found" }, { status: 404 });
     }
 
-    const items = await query<ItemRow[]>(
-      `SELECT
-        ii.*,
-        b.name AS brand_name,
-        m.name AS model_name
-      FROM invoice_items ii
-      LEFT JOIN vehicles v ON v.id = ii.vehicle_id
-      LEFT JOIN brands b ON b.id = v.brand_id
-      LEFT JOIN models m ON m.id = v.model_id
-      WHERE ii.invoice_id = ?
-      ORDER BY ii.id`,
-      [invoiceId],
-    );
-
     const data: InvoicePdfData = {
       invoiceNumber: invoice.invoice_number,
       invoiceDate: new Date(invoice.invoice_date).toLocaleDateString("es-ES", {
+        timeZone: "UTC",
+      }),
+      periodStart: new Date(invoice.period_start).toLocaleDateString("es-ES", {
+        timeZone: "UTC",
+      }),
+      periodEnd: new Date(invoice.period_end).toLocaleDateString("es-ES", {
         timeZone: "UTC",
       }),
       clientName: invoice.client_name,
@@ -87,17 +70,6 @@ export async function GET(_request: Request, { params }: RouteContext) {
       taxAmount: Number(invoice.tax_amount),
       total: Number(invoice.total),
       logoSrc: path.join(process.cwd(), "public", "mm.png"),
-      items: items.map((item) => ({
-        id: item.id,
-        service: item.description,
-        motorcycle:
-          [item.brand_name, item.model_name].filter(Boolean).join(" ") ||
-          "Motocicleta",
-        registrationIdentity: item.registration_identity,
-        quantity: Number(item.quantity),
-        unitPrice: Number(item.unit_price),
-        amount: Number(item.amount),
-      })),
     };
 
     const buffer = await renderToBuffer(createInvoicePdfDocument(data));

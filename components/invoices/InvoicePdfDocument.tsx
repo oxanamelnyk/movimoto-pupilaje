@@ -10,6 +10,8 @@ import {
 export type InvoicePdfData = {
   invoiceNumber: string;
   invoiceDate: string;
+  periodStart: string;
+  periodEnd: string;
   clientName: string;
   clientEmail: string | null;
   clientPhone: string | null;
@@ -18,15 +20,6 @@ export type InvoicePdfData = {
   taxAmount: number;
   total: number;
   logoSrc: string;
-  items: Array<{
-    id: string;
-    service: string;
-    motorcycle: string;
-    registrationIdentity: string | null;
-    quantity: number;
-    unitPrice: number;
-    amount: number;
-  }>;
 };
 
 const yellow = "#fff500";
@@ -45,8 +38,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-start",
   },
-  logo: { width: 285, height: 98, objectFit: "contain" },
-  company: { width: 205, textAlign: "right", lineHeight: 1.45, color: "#555555" },
+  logo: { width: 225, height: 69, objectFit: "contain" },
+  company: {
+    width: 205,
+    textAlign: "right",
+    lineHeight: 1,
+    fontSize: 8.5,
+    color: "#555555",
+  },
   companyName: { fontFamily: "Helvetica-Bold" },
   clientSection: {
     marginTop: 16,
@@ -87,6 +86,9 @@ const styles = StyleSheet.create({
     borderBottom: "1 solid #111111",
     justifyContent: "center",
   },
+  serviceRowCell: { minHeight: 92 },
+  serviceName: { fontSize: 8 },
+  serviceDescription: { textAlign: "center", lineHeight: 1.25 },
   centered: { textAlign: "center" },
   right: { textAlign: "right" },
   totals: { marginTop: 28, borderLeft: "1 solid #111111", borderTop: "1 solid #111111" },
@@ -113,6 +115,15 @@ const styles = StyleSheet.create({
 
 function money(value: number): string {
   return `${value.toFixed(2)} €`;
+}
+
+function serviceDescription(periodStart: string, periodEnd: string): string {
+  const period =
+    periodStart === periodEnd
+      ? `EL DÍA ${periodStart}`
+      : `DEL ${periodStart} AL ${periodEnd}`;
+
+  return `REALIZACIÓN DE SERVICIOS DE ALMACENAMIENTO DE MOTOCICLETAS - DURANTE EL PERÍODO ${period}`;
 }
 
 export function createInvoicePdfDocument(data: InvoicePdfData) {
@@ -185,26 +196,59 @@ export function createInvoicePdfDocument(data: InvoicePdfData) {
             <Text style={[styles.tableCell, styles.quantity, styles.centered]}>Cant.</Text>
             <Text style={[styles.tableCell, styles.amount, styles.centered]}>Importe</Text>
           </View>
-          {data.items.map((item) => (
-            <View key={item.id} style={styles.tableRow} wrap={false}>
-              <Text style={[styles.tableCell, styles.service, styles.centered]}>
-                {item.service}
-              </Text>
-              <Text style={[styles.tableCell, styles.description]}>
-                {item.motorcycle}
-                {item.registrationIdentity ? ` · ${item.registrationIdentity}` : ""}
-              </Text>
-              <Text style={[styles.tableCell, styles.price, styles.right]}>
-                {money(item.unitPrice)}
-              </Text>
-              <Text style={[styles.tableCell, styles.quantity, styles.centered]}>
-                {item.quantity}
-              </Text>
-              <Text style={[styles.tableCell, styles.amount, styles.right]}>
-                {money(item.amount)}
-              </Text>
-            </View>
-          ))}
+          <View style={styles.tableRow} wrap={false}>
+            <Text
+              style={[
+                styles.tableCell,
+                styles.serviceRowCell,
+                styles.service,
+                styles.serviceName,
+                styles.centered,
+              ]}
+            >
+              ALMACENAMIENTO
+            </Text>
+            <Text
+              style={[
+                styles.tableCell,
+                styles.serviceRowCell,
+                styles.description,
+                styles.serviceDescription,
+              ]}
+            >
+              {serviceDescription(data.periodStart, data.periodEnd)}
+            </Text>
+            <Text
+              style={[
+                styles.tableCell,
+                styles.serviceRowCell,
+                styles.price,
+                styles.right,
+              ]}
+            >
+              {money(data.subtotal)}
+            </Text>
+            <Text
+              style={[
+                styles.tableCell,
+                styles.serviceRowCell,
+                styles.quantity,
+                styles.centered,
+              ]}
+            >
+              1
+            </Text>
+            <Text
+              style={[
+                styles.tableCell,
+                styles.serviceRowCell,
+                styles.amount,
+                styles.right,
+              ]}
+            >
+              {money(data.subtotal)}
+            </Text>
+          </View>
         </View>
 
         <View style={styles.totals} wrap={false}>
